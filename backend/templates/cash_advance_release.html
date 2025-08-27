@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Release Cash Advance</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7f7f7; }
+        .release-container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        h2 { color: #388e3c; margin-bottom: 24px; }
+        .ca-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        .ca-table th, .ca-table td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; text-align: left; }
+        .ca-table th { background: #e8f5e9; color: #388e3c; }
+        .ca-table tr:hover { background: #f1f8e9; cursor: pointer; }
+        .ca-actions { margin-top: 16px; display: flex; gap: 10px; }
+        .btn { background: #43a047; color: #fff; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+        .btn:disabled { background: #bdbdbd; cursor: not-allowed; }
+        .btn-secondary { background: #e0e0e0; color: #388e3c; }
+        .details-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0005; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .details-card { background: #fff; padding: 32px 24px; border-radius: 8px; min-width: 350px; box-shadow: 0 2px 12px #0002; }
+        .details-card h3 { margin-top: 0; color: #388e3c; }
+        .details-row { margin-bottom: 10px; }
+        .sort-row { margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+        .sort-label { color: #388e3c; font-weight: 500; }
+        @media (max-width: 600px) {
+            .release-container { padding: 10px; }
+            .details-card { padding: 16px 8px; min-width: 220px; }
+            .ca-table th, .ca-table td { padding: 6px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="release-container">
+        <h2>Cash Advance Release</h2>
+        <div class="sort-row">
+            <span class="sort-label">Sort by:</span>
+            <select id="sort-select">
+                <option value="date_desc">Date (Newest)</option>
+                <option value="date_asc">Date (Oldest)</option>
+                <option value="name_asc">Employee Name (A-Z)</option>
+                <option value="name_desc">Employee Name (Z-A)</option>
+                <option value="unreleased">Unreleased Only</option>
+                <option value="released">Released Only</option>
+            </select>
+            <button class="btn btn-secondary" id="refresh-btn">Refresh</button>
+        </div>
+        <form id="mass-release-form">
+            <table class="ca-table" id="ca-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Employee Name</th>
+                        <th>TOA Number</th>
+                        <th>AP/DP Number</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ca-table-body">
+                    <!-- Cash advances will be loaded here -->
+                </tbody>
+            </table>
+            <div class="ca-actions">
+                <button type="button" class="btn" id="mass-release-btn" disabled>Release Selected</button>
+                <a href="{{ url_for('homepage') }}" class="btn btn-secondary" style="text-decoration:none;">Home</a>
+            </div>
+        </form>
+    </div>
+    <div id="ca-details-modal" class="details-modal" style="display:none;">
+        <div class="details-card" id="ca-details-card">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+    <script>
+        let cashAdvances = [];
+        let selectedTOAs = [];
+
+        function fetchCashAdvances() {
+            fetch('/api/current-user')
+                .then(res => res.json())
+                .then(user => {
+                    if (!user.groups || !user.groups.includes('Treasury')) {
+                        document.body.innerHTML = '<h3>Access Denied</h3>';
+                        return;
+                    }
+                    fetch('/api/cash-advance/list')
+                        .then(res => res.json())
+                        .then(data => {
+                            cashAdvances = data.filter(ca => ca.status === 'Approved');
+                            renderTable();
+                        });
+                });
+        }
+
+        function renderTable() {
+            const sortValue = document.getElementById('sort-select').value;
+            let sorted = [...cashAdvances];
+
+            sorted = sorted.filter(ca => ca.status !== 'Rejected' && ca.status !== 'Denied');
+
+            sorted.forEach(ca => {
+                ca.requestDate = ca.requestDate ? new Date(ca.requestDate) : null;
+            });
+
+            if (sortValue === 'unreleased') {
+                sorted = sorted.filter(ca => !ca.released);
+            } else if (sortValue === 'released') {
+                sorted = sorted.filter(ca => ca.released);
+            }
+
+            sorted.sort((a, b) => {
+                if (sortValue === 'date_desc') return (b.requestDate || 0) - (a.requestDate || 0);
+                if (sortValue === 'date_asc') return (a.requestDate || 0) - (b.requestDate || 0);
+                if (sortValue === 'name_asc') return (a.employeeName || '').localeCompare(b.employeeName || '');
+                if (sortValue === 'name_desc') return (b.employeeName || '').localeCompare(a.employeeName || '');
+                return 0;
+            }); 
+            
+            const tbody = document.getElementById('ca-table-body');
+            tbody.innerHTML = '';
+            sorted.forEach(ca => {
+                const checked = selectedTOAs.includes(ca.toa_number) ? 'checked' : '';
+                const dateStr = ca.requestDate
+                    ? (isNaN(new Date(ca.requestDate).getTime()) ? ca.requestDate : new Date(ca.requestDate).toLocaleDateString())
+                    : 'N/A';
+                const currency = (ca.travelType === '2' || ca.isInternational) ? 'USD' : 'PHP';
+                const releaseStatus = ca.released ? 
+                    `<span style="color:green;font-weight:bold;">Released</span>` : 
+                    `<span style="color:#bdbdbd;">Not Released</span>`;
+
+                fetch(`/api/verification/${ca.toa_number}`)
+                    .then(res => res.json())
+                    .then(verification => {
+                        let totalAmount = parseFloat(ca.totalAmount) || 0;
+                        if (verification && verification.hotel && verification.hotel.paymentType === 'Cash') {
+                            totalAmount += parseFloat(verification.hotel.amount) || 0;
+                        }
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><input type="checkbox" class="ca-checkbox" value="${ca.toa_number}" ${checked} ${ca.released ? 'disabled' : ''}></td>
+                                <td>${ca.employeeName || ''}</td>
+                                <td>${ca.toa_number}</td>
+                                <td>${ca.apdpNumber  || 'N/A'}</td>
+                                <td>${currency} ${totalAmount}</td>
+                                <td>${ca.status || 'Filed'}</td>
+                                <td>
+                                    ${releaseStatus}<br>
+                                    <button type="button" class="btn btn-secondary" onclick="showDetails('${ca.toa_number}')">Details</button>
+                                    <button type="button" class="btn" onclick="releaseCA('${ca.toa_number}')" ${ca.released ? 'disabled' : ''}>Release</button>
+                                </td>
+                            </tr>
+                        `;
+                    })
+                    .catch(() => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><input type="checkbox" class="ca-checkbox" value="${ca.toa_number}" ${checked} ${ca.released ? 'disabled' : ''}></td>
+                                <td>${ca.employeeName || ''}</td>
+                                <td>${ca.toa_number}</td>
+                                <td>${ca.apdpNumber  || 'N/A'}</td>
+                                <td>${currency} ${ca.totalAmount}</td>
+                                <td>${ca.status || 'Filed'}</td>
+                                <td>
+                                    ${releaseStatus}<br>
+                                    <button type="button" class="btn btn-secondary" onclick="showDetails('${ca.toa_number}')">Details</button>
+                                    <button type="button" class="btn" onclick="releaseCA('${ca.toa_number}')" ${ca.released ? 'disabled' : ''}>Release</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+            });
+            updateMassReleaseBtn();
+        }
+
+        function updateMassReleaseBtn() {
+            document.getElementById('mass-release-btn').disabled = selectedTOAs.length === 0;
+        }
+
+        document.getElementById('sort-select').onchange = renderTable;
+        document.getElementById('refresh-btn').onclick = fetchCashAdvances;
+
+        document.getElementById('select-all').onclick = function() {
+            const checked = this.checked;
+            selectedTOAs = checked ? cashAdvances.map(ca => ca.toa_number) : [];
+            document.querySelectorAll('.ca-checkbox').forEach(cb => cb.checked = checked);
+            updateMassReleaseBtn();
+        };
+
+        document.getElementById('ca-table-body').onclick = function(e) {
+            if (e.target.classList.contains('ca-checkbox')) {
+                const val = e.target.value;
+                if (e.target.checked) {
+                    if (!selectedTOAs.includes(val)) selectedTOAs.push(val);
+                } else {
+                    selectedTOAs = selectedTOAs.filter(t => t !== val);
+                }
+                updateMassReleaseBtn();
+            }
+        };
+
+        document.getElementById('mass-release-btn').onclick = function() {
+            if (selectedTOAs.length === 0) return;
+            if (!confirm(`Release ${selectedTOAs.length} cash advances?`)) return;
+            Promise.all(selectedTOAs.map(toa =>
+                fetch(`/api/cash-advance/${toa}/release`, { method: 'POST' })
+                    .then(res => res.json())
+            )).then(results => {
+                alert('Released and emailed selected cash advances!');
+                selectedTOAs = [];
+                fetchCashAdvances();
+            });
+        };
+
+        window.showDetails = function(toa_number) {
+            fetch(`/api/cash-advance/${toa_number}`)
+                .then(res => res.json())
+                .then(ca => {
+                    const currency = (ca.travelType === '2' || ca.isInternational) ? 'USD' : 'PHP';
+                    let requestDate = 'N/A';
+                    if (ca.requestDate) {
+                        const dateObj = new Date(ca.requestDate);
+                        requestDate = isNaN(dateObj.getTime()) ? ca.requestDate : dateObj.toLocaleString();
+                    }
+
+                    fetch(`/api/verification/${toa_number}`)
+                        .then(res => res.json())
+                        .then(verification => {
+                            let hotelVerificationHtml = '';
+                            let releasedAmount = parseFloat(ca.totalAmount) || 0;
+
+                            if (verification && verification.hotel && verification.hotel.paymentType === 'Cash') {
+                                hotelVerificationHtml = `
+                                    <div class="details-row"><strong>Hotel (Verified):</strong> ${verification.hotel.name}, ${verification.hotel.location}</div>
+                                    <div class="details-row"><strong>Hotel Payment Type:</strong> ${verification.hotel.paymentType}</div>
+                                    <div class="details-row"><strong>Actual Hotel Payment:</strong> ${currency} ${verification.hotel.amount}</div>
+                                `;
+                                releasedAmount += parseFloat(verification.hotel.amount) || 0;
+                            }
+
+                            let html = `<h3>Cash Advance Details</h3>
+                                <div class="details-row"><strong>Employee Name:</strong> ${ca.employeeName}</div>
+                                <div class="details-row"><strong>TOA Number:</strong> ${toa_number}</div>
+                                <div class="details-row"><strong>Date Filed:</strong> ${requestDate}</div>
+                                <div class="details-row"><strong>Total Amount:</strong> ${currency} ${ca.totalAmount}</div>
+                                ${hotelVerificationHtml}
+                                <div class="details-row"><strong>Total Released Amount:</strong> ${currency} ${releasedAmount}</div>
+                                <div class="details-row"><strong>Status:</strong> ${ca.status || 'Filed'}</div>
+                                <div class="details-row"><strong>Details:</strong> ${ca.details || ''}</div>
+                                <div class="details-row"><strong>Approvers:</strong><br>
+                                    <ul>
+                                        ${(ca.approvers || []).map(a => `<li>${a.name} (${a.position}) - ${a.status}${a.dateApproved ? ' on ' + new Date(a.dateApproved).toLocaleString() : ''}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="details-row"><strong>Sent Back Remarks:</strong> ${ca.sentBackRemarks || ''}</div>
+                                <div class="ca-actions">
+                                    <button class="btn" onclick="releaseCA('${toa_number}')">Release</button>
+                                    <button class="btn btn-secondary" onclick="closeDetails()">Close</button>
+                                </div>`;
+                            document.getElementById('ca-details-card').innerHTML = html;
+                            document.getElementById('ca-details-modal').style.display = 'flex';
+                        })
+                        .catch(() => {
+                            // If no verification found, show CA info only
+                            let html = `<h3>Cash Advance Details</h3>
+                                <div class="details-row"><strong>Employee Name:</strong> ${ca.employeeName}</div>
+                                <div class="details-row"><strong>TOA Number:</strong> ${toa_number}</div>
+                                <div class="details-row"><strong>Date Filed:</strong> ${requestDate}</div>
+                                <div class="details-row"><strong>Total Amount:</strong> ${currency} ${ca.totalAmount}</div>
+                                <div class="details-row"><strong>Total Released Amount:</strong> ${currency} ${ca.totalAmount}</div>
+                                <div class="details-row"><strong>Status:</strong> ${ca.status || 'Filed'}</div>
+                                <div class="details-row"><strong>Details:</strong> ${ca.details || ''}</div>
+                                <div class="details-row"><strong>Approvers:</strong><br>
+                                    <ul>
+                                        ${(ca.approvers || []).map(a => `<li>${a.name} (${a.position}) - ${a.status}${a.dateApproved ? ' on ' + new Date(a.dateApproved).toLocaleString() : ''}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="details-row"><strong>Sent Back Remarks:</strong> ${ca.sentBackRemarks || ''}</div>
+                                <div class="ca-actions">
+                                    <button class="btn" onclick="releaseCA('${toa_number}')">Release</button>
+                                    <button class="btn btn-secondary" onclick="closeDetails()">Close</button>
+                                </div>`;
+                            document.getElementById('ca-details-card').innerHTML = html;
+                            document.getElementById('ca-details-modal').style.display = 'flex';
+                        });
+                });
+        };
+
+        window.closeDetails = function() {
+            document.getElementById('ca-details-modal').style.display = 'none';
+        };
+
+        window.releaseCA = function(toa_number) {
+            fetch(`/api/cash-advance/${toa_number}/release`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || 'Email sent to employee!');
+                    closeDetails();
+                    fetchCashAdvances();
+                });
+        };
+
+        // Initial load
+        fetchCashAdvances();
+    </script>
+</body>
+</html>

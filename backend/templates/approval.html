@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Travel Authority Approval</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <style>
+        .textarea-container {
+            padding: 10px;
+        }
+        .textarea-container textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .destinations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .destination-box {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        @media print {
+        .destination-box {
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            page-break-inside: avoid;
+            }
+        }
+
+        .services-container {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        }
+        
+        .checkbox-display, .radio-display {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .checkbox-icon, .radio-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #555;
+            border-radius: 3px;
+            margin-right: 10px;
+            text-align: center;
+            line-height: 18px;
+            background-color: white;
+        }
+        
+        .radio-icon {
+            border-radius: 50%;
+        }
+        
+        .checkbox-label, .radio-label {
+            font-size: 16px;
+        }
+        
+        .nested-options {
+            margin-left: 30px;
+            margin-top: 5px;
+        }
+        
+        .radio-display-group {
+            margin-bottom: 10px;
+        }
+        .btn-disabled {
+            background-color: #cccccc !important;
+            color: #666666 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+        
+        .input-disabled {
+            background-color: #f5f5f5 !important;
+            cursor: not-allowed !important;
+            border-color: #ddd !important;
+        }
+        
+        .current-user-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .approval-status-message {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+                 <!-- Logout Button -->
+        
+        <form id="travel-form">
+            <div class="form">
+                <header>
+                    <strong class="head-text">Travel Order Authority Approval</strong>
+                </header>
+
+                <!-- Travel Details Section -->
+                <div class="fields travel-details">
+                    <div class="field-right">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Date Filed</label>
+                            <input id="dateFiled" class="subhead-text" type="datetime-local" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee ID</label>
+                            <input id="employeeId" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee Name</label>
+                            <input id="employeeName" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Department/Section</label>
+                            <input id="department" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Position</label>
+                            <input id="position" class="subhead-text" type="text" readonly>
+                        </div>
+                    </div>
+
+                    <div class="field-left">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Travel Type</label>
+                            <input id="travelType" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="double-input-field">
+                            <div class="input-field">
+                                <label class="subhead-text bold">Start from</label>
+                                <input id="startDate" class="subhead-text" type="date" readonly>
+                            </div>
+                            <div class="input-field">
+                                <label class="subhead-text bold">End Date</label>
+                                <input id="endDate" class="subhead-text" type="date" readonly>
+                            </div>
+                        </div>
+
+                        <div class="input-field" id="origin-container">
+                            <label class="subhead-text bold">Origin</label>
+                            <input id="origin" class="subhead-text" type="text" readonly>
+                        </div>
+                        
+                        <div class="input-field" id="destination-container">
+                            <label class="subhead-text bold">Destination(s)</label>
+                            <div id="destinations-list" class="destinations-list"></div>
+                        </div>
+                        <div class="summary">
+                            <label class="title-text bold">Services Required</label>
+                            <div class="summary-content">
+                                <div class="services-container">
+                                    <div class="checkbox-display">
+                                        <span class="checkbox-icon">
+                                            {% if travel_data.requiresHotel %}
+                                            ✓
+                                            {% else %}
+                                            
+                                            {% endif %}
+                                        </span>
+                                        <span class="checkbox-label">Hotel Accommodation</span>
+                                    </div>
+                                    
+                                    <div class="checkbox-display">
+                                        <span class="checkbox-icon">
+                                            {% if travel_data.requiresTransportation %}
+                                            ✓
+                                            {% else %}
+                                            
+                                            {% endif %}
+                                        </span>
+                                        <span class="checkbox-label">Transportation</span>
+                                    </div>
+                                    
+                                    {% if travel_data.requiresTransportation %}
+                                    <div class="nested-options">
+                                        <div id="travel-mode-section" class="radio-display-group">
+                                            <div class="radio-display">
+                                                <span class="radio-icon">
+                                                    {% if travel_data.travelMode == 'air' %}
+                                                    ●
+                                                    {% else %}
+                                                    
+                                                    {% endif %}
+                                                </span>
+                                                <span class="radio-label">Air</span>
+                                            </div>
+                                            <div class="radio-display">
+                                                <span class="radio-icon">
+                                                    {% if travel_data.travelMode == 'land' %}
+                                                    ●
+                                                    {% else %}
+                                                    
+                                                    {% endif %}
+                                                </span>
+                                                <span class="radio-label">Land</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="nested-options">
+                                            <div class="checkbox-display">
+                                                <span class="checkbox-icon">
+                                                    {% if 'car-service' in travel_data.transportationTypes %}
+                                                    ✓
+                                                    {% else %}
+                                                    
+                                                    {% endif %}
+                                                </span>
+                                                <span class="checkbox-label">Company Car</span>
+                                            </div>
+                                            <div class="checkbox-display">
+                                                <span class="checkbox-icon">
+                                                    {% if 'car-rental' in travel_data.transportationTypes %}
+                                                    ✓
+                                                    {% else %}
+                                                    
+                                                    {% endif %}
+                                                </span>
+                                                <span class="checkbox-label">Car Rental</span>
+                                            </div>
+                                            <div class="checkbox-display">
+                                                <span class="checkbox-icon">
+                                                    {% if 'grab' in travel_data.transportationTypes %}
+                                                    ✓
+                                                    {% else %}
+                                                    
+                                                    {% endif %}
+                                                </span>
+                                                <span class="checkbox-label">Grab</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purpose Section -->
+                <div class="purpose-container">
+                    <header>
+                        <p class="subhead-text">Request for authority to travel officially</p>
+                    </header>
+
+                    <div class="purpose">
+                        <div class="purpose-content">
+                            <div class="fields">
+                                <div class="input-field">
+                                    <label class="title-text bold">A. Purpose / Justification</label>
+                                    <textarea id="purpose" class="subhead-text" rows="4" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Itinerary Section -->
+                <div class="itenirary-container" id="itenirary-container">
+                    <div class="detailed-itenirary">
+                        <div class="itenirary-content">
+                            <label class="title-text bold head">B. Detailed Itinerary</label>
+                            <table class="itinerary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Date</th>
+                                        <th>Breakfast</th>
+                                        <th>Lunch</th>
+                                        <th>Dinner</th>
+                                        <th>Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itenirary-holder"></tbody>
+                            </table>
+                            <div id="itenirary-holder" class="itenirary"></div>
+                        </div>
+                    </div>
+                </div>
+
+
+                    <footer style="width: 80%; margin: 0 auto; margin-top: 15px;">
+                        <p class="subhead-text text-start">
+                            <span class="title-text bold">Note:</span>
+                            <br>*The employees shall prepare the expense report to liquidate the above cash advance with four (4) days after the arrival from trip.
+                            <br>*Employee will not be permitted to travel if the previous TOA Liquidation / Due settled.
+                            <br>*Failure to liquidate within prescribed period shall mean automatic salary deduction and subject to disciplinary action.
+                        </p>
+                    </footer>
+                </div>
+
+               
+                <div class="button-container">
+                    <div class="left-section">
+                        <a href="/logout" class="btn-submit logout-button">Logout</a>
+                    </div>
+                    <div class="right-section">
+                        <div class="right-section">
+                            <button id="proceed-btn" class="btn-submit" type="button" onclick="proceedToCashAdvance()">Proceed to Cash Advance</button>
+                            <button id="print-btn" class="btn-print" type="button" onclick="printPage()">Print</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </form>
+
+    </div>
+
+    
+    <script>
+        var toaNumber = "{{ toa_number }}";
+        console.log(toaNumber)
+        
+        function proceedToCashAdvance() {
+            window.location.href = `/cash-advance-approval/${toaNumber}`;
+        }
+
+        function getTravelTypeText(travelType) {
+                switch (travelType) {
+                    case "1":
+                        return "Select Travel type";
+                    case "2":
+                        return "International";
+                    case "3":
+                        return "Domestic";
+                    case "4":
+                        return "Official Business";
+                    default:
+                        return "Unknown";
+                }
+        }
+        
+            function getCountryName(destination) {
+            // For Official Business travel, return the destination text directly
+            if (typeof destination === 'string' && 
+                !['PHP', 'Japan', 'USA', 'Thailand', 'Indonesia', 'Malaysia', 
+                'Batangas', 'Bulacan', 'Davao', 'Manila', 'other'].includes(destination)) {
+                return destination;
+            }
+            
+            // For standard options, use the switch case
+            switch (destination) {
+                case "PHP":
+                    return "Philippines";
+                case "Japan":
+                    return "Japan";
+                case "USA":
+                    return "USA";
+                case "Thailand":
+                    return "Thailand";
+                case "Indonesia":
+                    return "Indonesia";
+                case "Malaysia":
+                    return "Malaysia";
+                case "Batangas":
+                    return "Batangas";
+                case "Bulacan":
+                    return "Bulacan";
+                case "Davao":
+                    return "Davao";
+                case "Manila":
+                    return "Manila";
+                case "other":
+                    return "Other";
+                default:
+                    return destination || "Unknown";
+            }
+        }
+        function formatDisplayDateTime(dateString) {
+            if (!dateString) return 'Not specified';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    console.warn("Invalid display date:", dateString);
+                    return 'Invalid date';
+                }
+                
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true
+                };
+                return date.toLocaleString('en-US', options);
+            } catch (e) {
+                console.error("Display date formatting error:", e);
+                return 'Invalid date';
+            }
+        }
+
+        function formatDateTimeForInput(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                // Handle both ISO strings and MongoDB Date objects
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    console.warn("Invalid date:", dateString);
+                    return '';
+                }
+                
+                // Convert to local datetime string in correct format
+                const pad = num => num.toString().padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            } catch (e) {
+                console.error("Date formatting error:", e);
+                return '';
+            }
+        }
+
+        function sendApprovalRequest(url, action, remarks) {
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ remarks: remarks })  // No need for approver name or index
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to process request');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(`Travel request ${action}: ${data.message}`);
+                updateApprovalTable(); // Refresh the table after approval/rejection
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while processing the request: " + error.message);
+            });
+        }
+
+
+
+    </script>
+
+    <script>
+
+        function calculateDateRange(startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return 1; // Default to 1 day if dates are invalid
+            }
+
+            const difference = end - start;
+            const days = Math.ceil(difference / (1000 * 60 * 60 * 24)) + 1; // Include the start date
+            return days > 0 ? days : 1; // Ensure at least 1 day
+        }
+        function printPage() {
+        if (event) event.preventDefault();
+        window.print();
+        return false;
+        }
+        $(document).ready(function() {
+            var toaNumber = "{{ toa_number }}";
+
+            
+            $.get(`/api/travel/${toaNumber}`, function(data) {
+                // Populate basic fields
+                $('#dateFiled').val(data.dateFiled);
+                $('#travelType').val(getTravelTypeText(data.travelType));
+                $('#employeeId').val(data.employeeId);
+                $('#employeeName').val(data.employee);
+                $('#department').val(data.department);
+                $('#position').val(data.position);
+                $('#startDate').val(formatDateForInput(data.startDate));
+                $('#endDate').val(formatDateForInput(data.endDate));
+                $('#origin').val(data.origin);
+                $('travelMode').val(data.travelMode);
+                $('requiresHotel').val(data.requiresHotel);
+                $('transporationTypes').val(data.transportationTypes);
+                $('requiresVerification').val(data.requiresVerification);
+                $('requiresTransportation').val(data.requiresTransportation);
+
+                $('#purpose').val(data.purpose);
+
+                var travelTypeText = $('#travelType').val() || $('#travelType').text();
+                if (travelTypeText.trim().toLowerCase() === 'official business') {
+                    $('#travel-mode-section').hide();
+                }
+
+                // Handle destinations - create separate boxes for each destination
+                if (data.destinations && data.destinations.length > 0) {
+                    // Log for debugging
+                    console.log("Raw destinations array:", data.destinations);
+                    
+                    // Filter out empty destinations and PHP
+                    const validDestinations = data.destinations.filter(dest => 
+                        dest && dest.trim() !== '' && dest !== 'PHP'
+                    );
+                    
+                    console.log("Valid destinations:", validDestinations);
+                    
+                    const destinationsContainer = $('#destinations-list');
+                    destinationsContainer.empty(); // Clear any existing content
+                    
+                    if (validDestinations.length > 0) {
+                        // Create a box for each valid destination
+                        validDestinations.forEach(dest => {
+                            const formattedDest = getCountryName(dest);
+                            destinationsContainer.append(`
+                                <div class="destination-box subhead-text">${formattedDest}</div>
+                            `);
+                        });
+                    } else {
+                        destinationsContainer.append(`
+                            <div class="destination-box subhead-text">No destination specified</div>
+                        `);
+                    }
+                } else {
+                    $('#destinations-list').html(`
+                        <div class="destination-box subhead-text">No destination specified</div>
+                    `);
+                }
+                
+                // Populate expenses
+                let breakfastQty = 0;
+                let lunchQty = 0;
+                let dinnerQty = 0;
+
+                if (data.itinerary && data.itinerary.length > 0) {
+                    data.itinerary.forEach(day => {
+                        if (day.meals.breakfast) breakfastQty++;
+                        if (day.meals.lunch) lunchQty++;
+                        if (day.meals.dinner) dinnerQty++;
+                    });
+                }
+
+                // Populate quantities
+                $('#breakfastQty').val(breakfastQty);
+                $('#lunchQty').val(lunchQty);
+                $('#dinnerQty').val(dinnerQty);
+                          
+                
+                // Populate detailed itinerary
+                var itineraryHtml = '';
+                if (data.itinerary && data.itinerary.length > 0) {
+                    data.itinerary.forEach(day => {
+                        itineraryHtml += `
+                            <tr>
+                                <td>${day.day}</td>
+                                <td>${day.date}</td>
+                                <td><input type="checkbox" ${day.meals.breakfast ? 'checked' : ''} disabled></td>
+                                <td><input type="checkbox" ${day.meals.lunch ? 'checked' : ''} disabled></td>
+                                <td><input type="checkbox" ${day.meals.dinner ? 'checked' : ''} disabled></td>
+                                <td><textarea readonly>${day.activity || (day.meals && day.meals.activity) || ''}</textarea></td>
+                            </tr>
+                        `;
+                    });
+                }
+                $('#itenirary-holder').html(itineraryHtml);
+
+
+                // updateTotalAmount();
+            });
+            
+        });
+
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    console.warn("Invalid date:", dateString);
+                    return '';
+                }
+                
+                // Convert to YYYY-MM-DD format
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("Date formatting error:", e);
+                return '';
+            }
+        }
+
+        function sendApprovalRequest(url, action, remarks, approverName) {
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ remarks: remarks, approver: approverName })  // Include approver name
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to process request');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(`Travel request ${action}: ${data.message}`);
+                updateApprovalTable(); // Refresh the table after approval/rejection
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while processing the request: " + error.message);
+            });
+        }
+
+        function updateApprovalTable() {
+            $.get(`/api/travel/${toaNumber}`, function(data) {
+                console.log("Backend response:", data);  // Log the backend response for debugging
+
+                var approvalTableBody = $('#approval-table-body');
+                approvalTableBody.empty(); // Clear existing rows
+
+                // Check if approvers exist and are an array
+                if (!data.approvers || !Array.isArray(data.approvers)) {
+                    console.warn("Approvers data is missing or invalid:", data.approvers);
+                    approvalTableBody.append(`
+                        <tr>
+                            <td colspan="4" class="text-center">No approvers found</td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                // Check current approver's status
+                const approverStatus = checkCurrentApproverStatus(data.approvers);
+                
+                // Disable/enable controls based on approver status
+                if (!approverStatus.canApprove) {
+                    // Disable buttons and add notification
+                    $('#approve-btn, #reject-btn').prop('disabled', true).addClass('btn-disabled');
+                    $('#remarks').prop('readonly', true).addClass('input-disabled');
+                    
+                    // Add a notification message
+                    if (!$('.approval-status-message').length) {
+                        $('<div class="approval-status-message"></div>')
+                            .text(approverStatus.message)
+                            .insertBefore('.button-container');
+                    } else {
+                        $('.approval-status-message').text(approverStatus.message);
+                    }
+                } else {
+                    // Enable buttons if user can approve
+                    $('#approve-btn, #reject-btn').prop('disabled', false).removeClass('btn-disabled');
+                    $('#remarks').prop('readonly', false).removeClass('input-disabled');
+                    $('.approval-status-message').remove();
+                }
+
+                // Add rows for each approver
+                data.approvers.forEach(approver => {
+                    var status = approver.status === 'Approved' ? 'Approved' : approver.status === 'Rejected' ? 'Rejected' : 'Pending';
+                    var dateApproved = approver.dateApproved ? formatDate(approver.dateApproved) : 'Pending';
+
+                    // Highlight the current user's row
+                    const isCurrentUser = approver.employeeId === "{{ current_user.employeeId }}";
+                    const rowClass = isCurrentUser ? 'current-user-row' : '';
+
+                    approvalTableBody.append(`
+                        <tr class="${rowClass}">
+                            <td>${approver.name}</td>
+                            <td>${approver.position}</td>
+                            <td>${status}</td>
+                            <td>${dateApproved}</td>
+                        </tr>
+                    `);
+                });
+            }).fail(function(err) {
+                console.error("Error fetching travel data:", err);
+                alert("Failed to fetch travel data. Please try again later.");
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Pending'; // Handle missing date
+            var date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'Pending'; // Handle invalid date
+            }
+            return date.toLocaleString(); // Format the date
+        }
+
+        // Call the function to update the table on page load
+        $(document).ready(function() {
+            updateApprovalTable();
+        });
+
+        // Update the table when the request is approved or rejected
+        async function approveTravel() {
+            if (event) event.preventDefault();
+            
+            // Check if button is disabled
+            if ($('#approve-btn').prop('disabled')) {
+                alert('You have already made a decision on this request.');
+                return false;
+            }
+            
+            try {
+                const response = await fetch(`/api/travel/${toaNumber}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to approve travel request');
+                }
+
+                const data = await response.json();
+                alert(`${data.message}`);
+                updateApprovalTable();
+                
+                // Disable buttons after approval to prevent double-clicking
+                $('#approve-btn, #reject-btn').prop('disabled', true).addClass('btn-disabled');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while approving the request.');
+            }
+        }
+
+        function rejectTravel() {
+            if (event) event.preventDefault();
+            
+            // Check if button is disabled
+            if ($('#reject-btn').prop('disabled')) {
+                alert('You have already made a decision on this request.');
+                return false;
+            }
+            
+            const remarks = document.getElementById('remarks').value;
+            if (!remarks.trim()) {
+                alert("Please provide remarks for rejection.");
+                return;
+            }
+            
+            fetch(`/api/travel/${toaNumber}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ remarks: remarks })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`${data.message}`);
+                updateApprovalTable();
+                
+                // Disable buttons after rejection to prevent double-clicking
+                $('#approve-btn, #reject-btn').prop('disabled', true).addClass('btn-disabled');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while rejecting the request.');
+            });
+        }
+        
+            // Function to poll the backend for updates
+        function pollApprovalStatus() {
+            setInterval(() => {
+                updateApprovalTable(); // Refresh the table every 5 seconds
+            }, 5000); // Poll every 5 seconds
+        }
+
+        // Start polling when the page loads
+        $(document).ready(function() {
+                    updateApprovalTable(); // Initial load
+                    pollApprovalStatus();  // Start polling
+
+                });
+
+        function checkCurrentApproverStatus(approvers) {
+        // Get the current user's employee ID
+        const currentUserId = "{{ current_user.employeeId }}";
+        
+        // Find the current user in the approvers list
+        const currentApprover = approvers.find(approver => approver.employeeId === currentUserId);
+        
+        if (!currentApprover) {
+            // User not found in approvers list
+            return { canApprove: false, status: 'not-approver'};
+        }
+        
+        if (currentApprover.status === 'Approved') {
+            return { canApprove: false, status: 'approved', message: 'APPROVED' };
+        }
+        
+        if (currentApprover.status === 'Rejected') {
+            return { canApprove: false, status: 'rejected', message: 'REJECTED' };
+        }
+        
+        // User is an approver and hasn't made a decision yet
+        return { canApprove: true, status: 'pending', message: '' };
+    }
+
+ 
+    </script>
+</body>
+</html>

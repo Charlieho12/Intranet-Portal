@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Cash Advance Monitor (Accounting)</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; }
+        .monitor-container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        h2 { color: #388e3c; margin-bottom: 24px; }
+        .ca-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        .ca-table th, .ca-table td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; text-align: left; }
+        .ca-table th { background: #e8f5e9; color: #388e3c; }
+        .ca-table tr:hover { background: #f1f8e9; }
+        .status-pending { color: #f0ad4e; font-weight: bold; }
+        .status-approved { color: #388e3c; font-weight: bold; }
+        .status-released { color: #007bff; font-weight: bold; }
+        .status-rejected { color: #d9534f; font-weight: bold; }
+        .btn-secondary { background: #e0e0e0; color: #388e3c; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="monitor-container">
+        <h2>Cash Advance Monitor (Accounting)</h2>
+        <div style="margin-bottom:18px;">
+            <label for="sort-select" style="color:#388e3c;font-weight:500;">Sort by:</label>
+            <select id="sort-select" class="btn-secondary" style="min-width:140px;">
+                <option value="date_desc">Date Filed (Newest)</option>
+                <option value="date_asc">Date Filed (Oldest)</option>
+                <option value="name_asc">Employee Name (A-Z)</option>
+                <option value="name_desc">Employee Name (Z-A)</option>
+                <option value="amount_desc">Amount (Highest)</option>
+                <option value="amount_asc">Amount (Lowest)</option>
+                <option value="with_apdp">With AP/DP Number</option>
+                <option value="without_apdp">Without AP/DP Number</option>
+            </select>
+        </div>
+        <table class="ca-table" id="ca-table">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>TOA Number</th>
+                    <th>Date Filed</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>AP/DP Number</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="ca-table-body">
+                <!-- Cash advances will be loaded here -->
+            </tbody>
+        </table>
+        <a href="{{ url_for('homepage') }}" class="btn-secondary" style="text-decoration:none;">Home</a>
+    </div>
+<script>
+let cashAdvanceData = [];
+
+function sortCashAdvances(data, sortBy) {
+    let sorted = [...data];
+    switch (sortBy) {
+        case 'date_desc':
+            sorted.sort((a, b) => new Date(b.requestDate) - new Date(a.requestDate));
+            break;
+        case 'date_asc':
+            sorted.sort((a, b) => new Date(a.requestDate) - new Date(b.requestDate));
+            break;
+        case 'name_asc':
+            sorted.sort((a, b) => (a.employeeName || '').localeCompare(b.employeeName || ''));
+            break;
+        case 'name_desc':
+            sorted.sort((a, b) => (b.employeeName || '').localeCompare(a.employeeName || ''));
+            break;
+        case 'amount_desc':
+            sorted.sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+            break;
+        case 'amount_asc':
+            sorted.sort((a, b) => (a.totalAmount || 0) - (b.totalAmount || 0));
+            break;
+        case 'with_apdp':
+            sorted = sorted.filter(ca => ca.apdpNumber && ca.apdpNumber.trim() !== '');
+            break;
+        case 'without_apdp':
+            sorted = sorted.filter(ca => !ca.apdpNumber || ca.apdpNumber.trim() === '');
+            break;
+    }
+    return sorted;
+}
+
+function renderCashAdvances(data) {
+    const tbody = document.getElementById('ca-table-body');
+    tbody.innerHTML = '';
+    data.forEach(ca => {
+        const dateStr = ca.requestDate
+            ? (isNaN(new Date(ca.requestDate).getTime()) ? ca.requestDate : new Date(ca.requestDate).toLocaleDateString())
+            : 'N/A';
+        const currency = (ca.travelType === '2' || ca.isInternational) ? 'USD' : 'PHP';
+        let statusClass = '';
+        if (ca.status === 'Pending Approval' || ca.status === 'Pending') statusClass = 'status-pending';
+        else if (ca.status === 'Approved') statusClass = 'status-approved';
+        else if (ca.status === 'Rejected') statusClass = 'status-rejected';
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${ca.employeeName || ''}</td>
+                <td>${ca.toa_number}</td>
+                <td>${dateStr}</td>
+                <td>${currency} ${ca.totalAmount}</td>
+                <td class="${statusClass}">${ca.status || 'Filed'}</td>
+                <td>
+                    ${ca.apdpNumber && ca.apdpNumber.trim() !== '' 
+                        ? `<span>${ca.apdpNumber}</span>` 
+                        : `<input type="text" id="apdp-${ca.toa_number}" style="width:120px;">`
+                    }
+                </td>
+                <td>
+                    ${ca.apdpNumber && ca.apdpNumber.trim() !== '' 
+                        ? '' 
+                        : `<button class="btn-secondary" onclick="saveAPDP('${ca.toa_number}')">Save</button>`
+                    }
+                </td>
+            </tr>
+        `;
+    });
+}
+function fetchCashAdvances() {
+    fetch('/api/cash-advance/all')
+        .then(res => res.json())
+        .then(data => {
+            cashAdvanceData = data.filter(ca => ca.status === 'Approved');
+            const sortBy = document.getElementById('sort-select').value;
+            renderCashAdvances(sortCashAdvances(cashAdvanceData, sortBy));
+        });
+}
+
+document.getElementById('sort-select').addEventListener('change', function() {
+    renderCashAdvances(sortCashAdvances(cashAdvanceData, this.value));
+});
+
+function saveAPDP(toa_number) {
+    const value = document.getElementById(`apdp-${toa_number}`).value.trim();
+    fetch(`/api/cash-advance/${toa_number}/apdp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apdpNumber: value })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message || data.error || 'Saved!');
+        fetchCashAdvances();
+    });
+}
+
+fetchCashAdvances();
+</script>
+</body>
+</html>

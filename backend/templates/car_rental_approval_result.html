@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Rental Approval Result</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card-header {
+            {% if status == 'approve' %}
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            {% else %}
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            {% endif %}
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            animation: bounceIn 0.8s ease-out 0.3s both;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .result-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .result-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .card-body {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .status-message {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .status-approved {
+            color: #059669;
+        }
+        
+        .status-rejected {
+            color: #dc2626;
+        }
+        
+        .remarks-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4f46e5;
+            text-align: left;
+        }
+        
+        .remarks-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .remarks-title i {
+            color: #4f46e5;
+        }
+        
+        .remarks-content {
+            color: #4b5563;
+            font-size: 1rem;
+            line-height: 1.6;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 150px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .success-checkmark {
+            animation: checkmarkSlide 1s ease-out 0.5s both;
+        }
+        
+        @keyframes checkmarkSlide {
+            0% {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .error-x {
+            animation: errorShake 0.8s ease-out 0.5s both;
+        }
+        
+        @keyframes errorShake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            75% {
+                transform: translateX(5px);
+            }
+        }
+        
+        .celebration-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+            }
+            
+            .card-header {
+                padding: 30px 20px;
+            }
+            
+            .card-body {
+                padding: 30px 20px;
+            }
+            
+            .result-title {
+                font-size: 1.6rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="result-card">
+            {% if status == 'approve' %}
+            <div class="celebration-particles">
+                <div class="particle" style="left: 10%; animation-delay: 0s; width: 8px; height: 8px;"></div>
+                <div class="particle" style="left: 20%; animation-delay: 0.5s; width: 6px; height: 6px;"></div>
+                <div class="particle" style="left: 80%; animation-delay: 1s; width: 10px; height: 10px;"></div>
+                <div class="particle" style="left: 90%; animation-delay: 1.5s; width: 7px; height: 7px;"></div>
+            </div>
+            {% endif %}
+            
+            <div class="card-header">
+                <div class="result-icon">
+                    {% if status == 'approve' %}
+                        <i class="fas fa-check-circle success-checkmark"></i>
+                    {% else %}
+                        <i class="fas fa-times-circle error-x"></i>
+                    {% endif %}
+                </div>
+                <div class="result-title">
+                    {% if status == 'approve' %}
+                        Request Approved!
+                    {% else %}
+                        Request Rejected
+                    {% endif %}
+                </div>
+                <div class="result-subtitle">
+                    Car rental request has been 
+                    {% if status == 'approve' %}
+                        successfully approved
+                    {% else %}
+                        declined
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="status-message">
+                    <span class="{% if status == 'approve' %}status-approved{% else %}status-rejected{% endif %}">
+                        {% if status == 'approve' %}
+                            <i class="fas fa-thumbs-up"></i>
+                            Your car rental request has been approved and processed successfully.
+                        {% else %}
+                            <i class="fas fa-thumbs-down"></i>
+                            Unfortunately, your car rental request has been rejected.
+                        {% endif %}
+                    </span>
+                </div>
+                
+                {% if remarks %}
+                <div class="remarks-section">
+                    <div class="remarks-title">
+                        <i class="fas fa-comment-alt"></i>
+                        Additional Comments
+                    </div>
+                    <div class="remarks-content">
+                        {{ remarks }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                
+                <div class="action-buttons">
+                    <a href="{{ url_for('homepage') }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i>
+                        Back to Dashboard
+                    </a>
+                  
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a subtle pulsing effect to the icon
+            const icon = document.querySelector('.result-icon i');
+            setInterval(() => {
+                icon.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    icon.style.transform = 'scale(1)';
+                }, 200);
+            }, 3000);
+            
+            // Add confetti effect for approved requests
+            {% if status == 'approve' %}
+            setTimeout(() => {
+                createConfetti();
+            }, 1000);
+            {% endif %}
+        });
+        
+        function createConfetti() {
+            const colors = ['#fbbf24', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'];
+            const container = document.querySelector('.celebration-particles');
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'absolute';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.width = Math.random() * 8 + 4 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = '50%';
+                confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                
+                container.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // Add the fall animation for confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(-10px) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

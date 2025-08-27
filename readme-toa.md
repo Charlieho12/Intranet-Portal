@@ -149,19 +149,6 @@ It is built using Flask (Python), MongoDB, and Flask-Mail for email notification
 
 ---
 
-## FAQ
-
-**Q: How do I reset a user’s password?**  
-A: Update the `password` field in the `users` collection (hashed with bcrypt).
-
-**Q: How do I add a new approver?**  
-A: Add the approver’s details in the `users` collection with the correct position and department.
-
-**Q: Can I use a different email provider?**  
-A: Yes, update the `MAIL_SERVER`, `MAIL_PORT`, etc., in app.py.
-
----
-
 ## Support
 
-For technical support, contact your IT administrator or the project maintainer.
+For technical support, contact your IT administrator or the project manager.

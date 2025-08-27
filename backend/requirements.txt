@@ -1,0 +1,12 @@
+Flask
+Flask-PyMongo
+Flask-Login
+Flask-Bcrypt
+Flask-Mail
+Flask-Cors
+pymongo
+email-validator
+pytz
+gunicorn
+Werkzeug
+Flask-Swagger-UI

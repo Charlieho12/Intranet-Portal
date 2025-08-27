@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Official Business</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+        <form id="edit-ob-form">
+            <!-- Hidden Inputs -->
+            <input type="hidden" id="obNumber" name="obNumber" value="{{ ob_number }}">
+            <input type="hidden" id="user_employeeId" value="{{ user_data.employeeId }}">
+            <input type="hidden" id="user_fullName" value="{{ user_data.fullName }}">
+            <input type="hidden" id="user_department" value="{{ user_data.department }}">
+            <input type="hidden" id="user_position" value="{{ user_data.position }}">
+            <input type="hidden" id="requires-cash-advance" name="requiresCashAdvance" value="false">
+
+            <div class="form">
+                <header>
+                    <strong class="head-text">Edit Official Business</strong>
+                </header>
+                <!-- Travel Details Section -->
+                <div class="fields travel-details">
+                    <div class="field-right">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Date Filed</label>
+                            <input id="dateFiled" class="subhead-text" type="datetime-local" value="{{ ob.dateFiled|default('') }}" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee ID</label>
+                            <input id="employeeId" class="subhead-text" type="text" value="{{ ob.employeeId|default('') }}" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee Name</label>
+                            <input id="employeeName" class="subhead-text" type="text" value="{{ ob.employee|default('') }}" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Department/Section</label>
+                            <input id="department" class="subhead-text" type="text" value="{{ ob.department|default('') }}" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Position</label>
+                            <input id="position" class="subhead-text" type="text" value="{{ ob.position|default('') }}" readonly>
+                        </div>
+                    </div>
+                    <div class="field-left">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Travel Type</label>
+                            <select class="subhead-text" name="travel-type" id="travel-type" required>
+                                <option value="4" selected>Official Business</option>
+                            </select>
+                        </div>
+                        <div class="double-input-field">
+                            <div class="input-field">
+                                <label class="subhead-text bold">Start from</label>
+                                <input id="start-date" class="subhead-text" type="date" value="{{ ob.startDate.strftime('%Y-%m-%d') if ob.startDate }}" required>
+                            </div>
+                            <div class="input-field">
+                                <label class="subhead-text bold">End to</label>
+                                <input id="end-date" class="subhead-text" type="date" value="{{ ob.endDate.strftime('%Y-%m-%d') if ob.endDate }}" required>
+                            </div>
+                        </div>
+                        <div class="input-field" id="origin-container">
+                            <label class="subhead-text bold">Origin</label>
+                            <select class="subhead-text" name="origin" id="origin" required>
+                                <option value="">Select Origin</option>
+                                <option value="Bulacan" {% if ob.origin == "Bulacan" %}selected{% endif %}>Bulacan</option>
+                                <option value="Manila" {% if ob.origin == "Manila" %}selected{% endif %}>Manila</option>
+                            </select>
+                        </div>
+                        <div id="destination-container">
+                            <div class="destination-container official-business">
+                                {% if ob.destinations %}
+                                    {% for dest in ob.destinations %}
+                                    <div class="input-field">
+                                        <div class="flex-justify-between">
+                                            <label class="subhead-text bold">Destination</label>
+                                            {% if loop.first %}
+                                            <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                            {% else %}
+                                            <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                                            {% endif %}
+                                        </div>
+                                        <input type="text" class="subhead-text dest" name="destination" value="{{ dest }}" placeholder="Enter destination" required>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="input-field">
+                                        <div class="flex-justify-between">
+                                            <label class="subhead-text bold">Destination</label>
+                                            <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                        </div>
+                                        <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination" required>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- Services Required -->
+                        <div class="services-container">
+                            <label class="subhead-text bold">Services Required</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="transport-required" name="services[]" value="transportation" {% if ob.requiresTransportation %}checked{% endif %}>
+                                    <span>Transportation</span>
+                                </label>
+                                <div id="transport-options" class="transport-options" style="display: none; margin-left: 25px; margin-top: 10px;">
+                                    <label class="subhead-text bold">Transportation Services</label>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="car-service" {% if "Company Car" in ob.transportationTypes %}checked{% endif %}>
+                                            <span>Company Car</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="common-car" {% if "Common Car" in ob.transportationTypes %}checked{% endif %}>
+                                            <span>Common Car</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="car-rental" {% if "Car Rental" in ob.transportationTypes %}checked{% endif %}>
+                                            <span>Car Rental</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="grab" {% if "TNVS/PUV" in ob.transportationTypes %}checked{% endif %}>
+                                            <span>TNVS/PUV</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-section payment-option-section" id="payment-option-section" style="display:none;">
+                                    <label class="subhead-text bold">Payment Option</label>
+                                    <div class="radio-group">
+                                        <div class="radio-option">
+                                            <input type="radio" id="payment-option-cash" name="paymentOption" value="Cash" {% if ob.paymentOption == "Cash" %}checked{% endif %}>
+                                            <label for="payment-option-cash">Cash</label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" id="payment-option-card" name="paymentOption" value="Credit Card" {% if ob.paymentOption == "Credit Card" %}checked{% endif %}>
+                                            <label for="payment-option-card">Credit Card</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Purpose / Justification Section -->
+                <div class="purpose-container">
+                    <header>
+                        <p class="subhead-text">Request for authority to travel officially</p>
+                    </header>
+                    <div class="purpose">
+                        <div class="purpose-content">
+                            <div class="fields">
+                                <div class="input-field">
+                                    <label class="title-text bold">A. Purpose / Justification</label>
+                                    <textarea class="subhead-text" rows="4" id="purpose" required>{{ ob.purpose|default('') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Buttons -->
+                <div class="button-container">
+                    <div class="left-section">
+                        <a href="/logout" class="btn-submit logout-button">Logout</a>
+                        <a href="{{ url_for('homepage') }}" class="btn-submit home-button" style="margin-left: 10px;">Home</a>
+                    </div>
+                    <div class="right-section">
+                        <div class="btn-holder flex-justify-end">
+                            <button id="submit-btn" class="btn-submit" type="submit" value="submit">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script>
+    // Add/remove destination logic
+    $('.add').click(function () {
+        var container = $(this).closest('.destination-container');
+        var maxDestinations = 4;
+        if (container.children('.input-field').length >= maxDestinations) {
+            alert("Maximum number of destinations reached (" + maxDestinations + ").");
+            return;
+        }
+        if (confirm("Do you want to add a destination?")) {
+            var newDestination = `
+                <div class="input-field">
+                    <div class="flex-justify-between">
+                        <label class="subhead-text bold">Destination</label>
+                        <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                    </div>
+                    <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination">
+                </div>
+            `;
+            container.append(newDestination);
+        }
+    });
+    $(document).on('click', '.remove', function () {
+        var confirmation = confirm("Do you want to remove this destination?");
+        if (confirmation) {
+            $(this).closest('.input-field').remove();
+        }
+    });
+
+    // Show/hide transportation options
+    $('#transport-required').change(function() {
+        if($(this).is(':checked')) {
+            $('#transport-options').slideDown();
+        } else {
+            $('#transport-options').slideUp();
+            $('#transport-options input[type="checkbox"]').prop('checked', false);
+        }
+    });
+    // Payment option logic
+    $('input[name="transport-type[]"]').change(function() {
+        let showPaymentOption = $('input[name="transport-type[]"][value="car-rental"]').is(':checked') ||
+                               $('input[name="transport-type[]"][value="grab"]').is(':checked');
+        $('#payment-option-section').toggle(showPaymentOption);
+        if (!showPaymentOption) {
+            $('input[name="paymentOption"]').prop('checked', false);
+        }
+    });
+    // On page load, show transport/payment if needed
+    $(document).ready(function() {
+        if($('#transport-required').is(':checked')) {
+            $('#transport-options').show();
+        }
+        let showPaymentOption = $('input[name="transport-type[]"][value="car-rental"]').is(':checked') ||
+                               $('input[name="transport-type[]"][value="grab"]').is(':checked');
+        $('#payment-option-section').toggle(showPaymentOption);
+    });
+
+    // Form submission logic (AJAX)
+    $('#edit-ob-form').submit(function(e) {
+        e.preventDefault();
+        // Collect destinations
+        var destinations = [];
+        $('.dest').each(function() {
+            if ($(this).val().trim() !== '') {
+                destinations.push($(this).val().trim());
+            }
+        });
+        // Get selected transport types
+        var transportationTypes = [];
+        $('input[name="transport-type[]"]:checked').each(function() {
+            let value = $(this).val();
+            if (value === 'car-rental') value = 'Car Rental';
+            if (value === 'grab') value = 'TNVS/PUV';
+            if (value === 'car-service') value = 'Company Car';
+            if (value === 'common-car') value = 'Common Car';
+            transportationTypes.push(value);
+        });
+        // Get payment option
+        var paymentOption = null;
+        if ($('#payment-option-section').is(':visible')) {
+            paymentOption = $('input[name="paymentOption"]:checked').val() || null;
+        }
+        var requestData = {
+            dateFiled: $('#dateFiled').val(),
+            employeeId: $('#employeeId').val(),
+            employee: $('#employeeName').val(),
+            department: $('#department').val(),
+            position: $('#position').val(),
+            travelType: $('#travel-type').val(),
+            startDate: $('#start-date').val(),
+            endDate: $('#end-date').val(),
+            origin: $('#origin').val(),
+            destinations: destinations,
+            purpose: $('#purpose').val(),
+            requiresTransportation: $('#transport-required').is(':checked'),
+            transportationTypes: transportationTypes,
+            paymentOption: paymentOption
+        };
+        $.ajax({
+            url: '/api/official-business/{{ ob_number }}/update',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(response) {
+                alert('Official Business updated successfully!');
+                window.location.href = '/home';
+            },
+            error: function(xhr) {
+                alert('Error updating Official Business: ' + (xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Unknown error'));
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #e0f7e9;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-content-flex {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            min-width: 0;
+        }
+        .bg-image {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: url('{{ url_for('static', filename='kubota_bg.jpg') }}') center center/cover no-repeat;
+            opacity: 0.50;
+            z-index: 0;
+        }
+        @keyframes fadeInBg {
+            from { opacity: 0; }
+            to { opacity: 0.18; }
+        }
+        .kubota-header {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 5px 24px 0 24px;
+            background: transparent;
+            animation: slideDown 1s cubic-bezier(.77,0,.18,1);
+        }
+        .kubota-logo {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 2px 8px #0002);
+            animation: fadeIn 1.2s;
+        }
+        .kubota-title {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .kubota-slogan {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #222;
+            font-family: Arial, sans-serif;
+            letter-spacing: -1px;
+        }
+        .kubota-divider {
+            font-size: 1.2em;
+            color: #888;
+            margin: 0 8px;
+        }
+        .kubota-company {
+            font-size: 1.2em;
+            color: #222;
+            font-family: Arial, sans-serif;
+            font-weight: 500;
+        }
+        .main-card {
+            background: rgba(255,255,255,0.75);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px #0002;
+            padding: 38px 32px 28px 32px;
+            width: 50%;
+            height: 50%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: floatUp 1.2s cubic-bezier(.77,0,.18,1);
+            position: relative;
+            z-index: 2;
+        }
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-40px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .logout-btn {
+            position: fixed;
+            top: 24px;
+            right: 32px;
+            background: #fff;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+            border-radius: 18px;
+            padding: 8px 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            z-index: 3;
+        }
+        .logout-btn:hover {
+            background: #1976d2;
+            color: #fff;
+        }
+        .dashboard {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+        }
+        .card {
+            background: rgba(255,255,255,0.92);
+            border-radius: 16px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 28px 18px 18px 18px;
+            min-width: 100px;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 8px 16px 8px;
+            transition: box-shadow 0.2s, transform 0.15s;
+            position: relative;
+        }
+        .card:hover {
+            box-shadow: 0 6px 24px #1976d230;
+            transform: translateY(-4px) scale(1.03);
+        }
+        .time-section h2 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 1.3em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .btn {
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 6px;
+            border: none;
+            background: #1976d2;
+            color: #fff;
+            cursor: pointer;
+            margin: 3px;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn:active, .btn:hover {
+            background: #1565c0;
+            transform: scale(1.04);
+        }
+        .icon-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .toa-icon, .ca-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background: #fff3e0;
+            box-shadow: 0 2px 12px rgba(255, 152, 0, 0.12);
+            font-size: 60px;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+        .toa-icon svg, .ca-icon svg {
+            width: 48px;
+            height: 48px;
+        }
+        #ob-icon.toa-icon {
+            background: #e3f2fd;
+            box-shadow: 0 2px 12px rgba(25, 118, 210, 0.12);
+        }
+        #ca-release-toa-icon.ca-icon {
+            background: #e8f5e9;
+            box-shadow: 0 2px 12px rgba(67, 160, 71, 0.12);
+        }
+        .toa-label {
+            font-size: 20px;
+            margin-top: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        @media (max-width: 1000px) {
+            .main-card {
+                max-width: 98vw;
+                padding: 18px 2vw 16px 2vw;
+            }
+            .dashboard {
+                gap: 18px;
+            }
+            .card {
+                min-width: 90vw;
+                margin: 0 0 18px 0;
+            }
+        }
+        @media (max-width: 600px) {
+            .kubota-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 16px 8px 0 8px;
+            }
+            .kubota-logo {
+                height: 36px;
+            }
+            .main-card {
+                max-width: 99vw;
+                padding: 8px 2vw 8px 2vw;
+                margin: 12px auto 0 auto;
+            }
+            .dashboard {
+                gap: 10px;
+                margin-top: 10px;
+            }
+            .card {
+                min-width: 98vw;
+                padding: 12px 2vw 10px 2vw;
+                border-radius: 12px;
+            }
+            .toa-icon, .ca-icon {
+                width: 48px;
+                height: 48px;
+            }
+            .toa-label {
+                font-size: 1em;
+                margin-top: 6px;
+            }
+            .logout-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 0.95em;
+            }
+        }
+        .btn:disabled,
+        #time-in-btn:disabled,
+        #time-out-btn:disabled {
+            background: #bdbdbd !important;
+            color: #888 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+            box-shadow: none;
+            border: none;
+        }
+        #cancel-toa-icon-btn.ca-icon {
+            background: #ffebee;
+            box-shadow: 0 2px 12px rgba(220, 53, 69, 0.12);
+        }
+        #toa-reports-icon-btn.ca-icon {
+            background: #e1f5fe;
+            box-shadow: 0 2px 12px rgba(23, 162, 184, 0.12);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="kubota-header">
+        <img src="{{ url_for('static', filename='kubota_logo.png') }}" alt="Kubota Logo" class="kubota-logo">
+        <div class="kubota-title">
+            <span class="kubota-slogan">For Earth, For Life</span>
+            <span class="kubota-company">Kubota Philippines, Inc.</span>
+        </div>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+    <div class="main-content-flex">
+        <div class="main-card">
+            <div class="dashboard">
+                <div class="card time-section">
+                    <h2>Time In / Time Out</h2>
+                    <div id="current-time"></div>
+                    <button class="btn" id="time-in-btn">Time In</button>
+                    <button class="btn" id="time-out-btn">Time Out</button>
+                    <div id="time-message"></div>
+                </div>
+                <div class="card icon-section">
+                    <div id="toa-icon" class="toa-icon" title="Travel Order Authority">
+                        <!-- suitcase icon SVG for better look -->
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="7" width="18" height="13" rx="3" fill="#ff9800"/>
+                            <rect x="8" y="3" width="8" height="4" rx="2" fill="#ffb74d"/>
+                            <rect x="7" y="11" width="10" height="2" rx="1" fill="#fff3e0"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">TOA</div>
+                </div>
+                <div class="card icon-section">
+                    <div id="ob-icon" class="toa-icon" title="Official Business">
+                        <!-- briefcase icon SVG for OB -->
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="7" width="18" height="13" rx="3" fill="#1976d2"/>
+                            <rect x="8" y="3" width="8" height="4" rx="2" fill="#90caf9"/>
+                            <rect x="7" y="11" width="10" height="2" rx="1" fill="#e3f2fd"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">Official Business</div>
+                </div>
+                <div class="card icon-section" id="ca-release-icon" style="display: none;">
+                    <div id="ca-release-toa-icon" class="ca-icon" title="Release Cash Advance">
+                        <!-- money icon SVG -->
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="7" width="18" height="13" rx="3" fill="#43a047"/>
+                            <circle cx="12" cy="13" r="4" fill="#c8e6c9"/>
+                            <rect x="7" y="11" width="10" height="2" rx="1" fill="#fff"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">Release Cash Advance</div>
+                </div>
+                <div class="card icon-section" id="ca-monitor-icon" style="display: none;">
+                    <div id="ca-monitor-toa-icon" class="ca-icon" title="Monitor Cash Advance">
+                        <!-- accounting/monitor icon SVG -->
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="7" width="18" height="13" rx="3" fill="#fbc02d"/>
+                            <circle cx="12" cy="13" r="4" fill="#fffde7"/>
+                            <rect x="7" y="11" width="10" height="2" rx="1" fill="#fff"/>
+                            <rect x="10" y="16" width="4" height="2" rx="1" fill="#fbc02d"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">Monitor Cash Advance</div>
+                </div>
+                <div class="card icon-section" id="cancel-toa-icon" style="display: none;">
+                    <div id="cancel-toa-icon-btn" class="ca-icon" title="Cancel TOA">
+                        <!-- cancel/times-circle icon SVG -->
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" fill="#dc3545"/>
+                            <path d="M16 8l-8 8M8 8l8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">Cancel TOA</div>
+                </div>
+                <div class="card icon-section" id="toa-reports-icon" style="display: none;">
+                    <div id="toa-reports-icon-btn" class="ca-icon" title="TOA Reports">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="3" fill="#17a2b8"/>
+                            <rect x="7" y="7" width="3" height="10" rx="1" fill="#fff"/>
+                            <rect x="11" y="10" width="3" height="7" rx="1" fill="#fff"/>
+                            <rect x="15" y="5" width="3" height="12" rx="1" fill="#fff"/>
+                            <circle cx="8.5" cy="6" r="1" fill="#17a2b8"/>
+                            <circle cx="12.5" cy="9" r="1" fill="#17a2b8"/>
+                            <circle cx="16.5" cy="4" r="1" fill="#17a2b8"/>
+                        </svg>
+                    </div>
+                    <div class="toa-label">TOA Reports</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Show current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Time In/Out handlers
+        document.getElementById('time-in-btn').onclick = function() {
+            const btnIn = document.getElementById('time-in-btn');
+            const btnOut = document.getElementById('time-out-btn');
+            btnIn.disabled = true; // Disable immediately to prevent double-click
+            fetch('/api/time', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: 'in' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('time-message').textContent = data.message || 'Time In recorded!';
+                document.getElementById('time-message').style.color = 'green';
+                btnIn.disabled = true;
+                btnOut.disabled = false;
+            })
+            .catch(() => {
+                document.getElementById('time-message').textContent = 'Error recording Time In.';
+                document.getElementById('time-message').style.color = 'red';
+                btnIn.disabled = false;
+            });
+        };
+
+        document.getElementById('time-out-btn').onclick = function() {
+            const btnIn = document.getElementById('time-in-btn');
+            const btnOut = document.getElementById('time-out-btn');
+            btnOut.disabled = true; // Disable immediately to prevent double-click
+            fetch('/api/time', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: 'out' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('time-message').textContent = data.message || 'Time Out recorded!';
+                document.getElementById('time-message').style.color = 'green';
+                btnOut.disabled = true;
+                btnIn.disabled = false;
+            })
+            .catch(() => {
+                document.getElementById('time-message').textContent = 'Error recording Time Out.';
+                document.getElementById('time-message').style.color = 'red';
+                btnOut.disabled = false;
+            });
+        };
+
+        function setTimeButtons() {
+            fetch('/api/time-in-status')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('time-in-btn').disabled = !!data.timed_in_today;
+                });
+            fetch('/api/time-out-status')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('time-out-btn').disabled = !!data.timed_out_today;
+                });
+        }
+
+        setTimeButtons();
+        setInterval(function() {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                setTimeButtons();
+            }
+        }, 60000);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/current-user')
+                .then(res => res.json())
+                .then(user => {
+                    if (user.groups && user.groups.includes('Treasury')) {
+                        document.getElementById('ca-release-icon').style.display = 'block';
+                        
+                        document.getElementById('ca-release-toa-icon').onclick = function() {
+                            window.location.href = '/cash-advance-release';
+                        };
+                    }
+                    if (user.groups && user.groups.includes('General Accounting')) {
+                        document.getElementById('ca-monitor-icon').style.display = 'block';
+                        document.getElementById('ca-monitor-toa-icon').onclick = function() {
+                            window.location.href = '/cash-advance-monitor';
+                        };
+                    }
+
+                    const coordinatorIds = ['AMC052024-457', 'LOU070124-460', 'KSMZ022122-367', 'MDMA120102-094'];
+                    if (coordinatorIds.includes(user.employeeId)) {
+                        document.getElementById('cancel-toa-icon').style.display = 'block';
+                        document.getElementById('cancel-toa-icon-btn').onclick = function() {
+                            window.location.href = '/cancel-toa';
+                        };
+                    }
+
+                    const accountingIds = ['MTD040323-413', 'LRFT031824-445'];
+                    if (accountingIds.includes(user.employeeId)) {
+                        document.getElementById('toa-reports-icon').style.display = 'block';
+                        document.getElementById('toa-reports-icon-btn').onclick = function() {
+                            window.location.href = '/toa-reports';
+                        };
+                    }
+
+                })
+                .catch(err => {
+                    console.log('Error checking user groups:', err);
+                });
+        });
+
+        // TOA icon click handler
+        document.getElementById('toa-icon').onclick = function() {
+            window.location.href = '/toa'; // Change to your TOA form route if different
+        };
+        // Official Business icon click handler
+        document.getElementById('ob-icon').onclick = function() {
+            window.location.href = '/official-business';
+        };
+    </script>
+</body>
+</html>

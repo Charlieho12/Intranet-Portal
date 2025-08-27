@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}TOA Form{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12.5px;}
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px;}
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f8f8f8; }
+        .print-btn { margin-bottom: 20px; }
+        @media print {
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+{% block content %}
+<div class="container">
+    <h2>Travel Order Authority (TOA) Form</h2>
+    <button onclick="window.print()" class="print-btn" style="float:right;">🖨️ Print</button>
+    <hr>
+    <h3>TOA Details</h3>
+    <table>
+        <tr><th>TOA Number:</th><td>{{ travel_data.toaNumber }}</td></tr>
+        <tr><th>Employee:</th><td>{{ travel_data.employee }}</td></tr>
+        <tr><th>Department:</th><td>{{ travel_data.department }}</td></tr>
+        <tr><th>Position:</th><td>{{ travel_data.position }}</td></tr>
+        <tr><th>Date Filed:</th><td>{{ travel_data.dateFiled | format_datetime('%Y-%m-%d %H:%M')}}</td></tr>
+        <tr><th>Start Date:</th><td>{{ travel_data.startDate|format_datetime('%Y-%m-%d') }}</td></tr>
+        <tr><th>End Date:</th><td>{{ travel_data.endDate|format_datetime('%Y-%m-%d') }}</td></tr>
+        <tr><th>Origin:</th><td>{{ travel_data.origin }}</td></tr>
+        <tr>
+            <th>Destinations:</th>
+            <td>
+                {% set filtered = [] %}
+                {% for dest in travel_data.destinations %}
+                    {% if dest.strip() %}
+                        {% set _ = filtered.append(dest.strip()) %}
+                    {% endif %}
+                {% endfor %}
+                {{ filtered | join(', ') }}
+            </td>
+        </tr>
+        <tr><th>Purpose:</th><td>{{ travel_data.purpose }}</td></tr>
+    </table>
+    <hr>
+    <h3>Approvers</h3>
+    <table>
+        <tr>
+            <th>Name</th><th>Position</th><th>Status</th><th>Date Approved</th>
+        </tr>
+        {% set approvers = cash_advance.approvers if cash_advance and cash_advance.approvers else travel_data.approvers %}
+        {% for approver in approvers %}
+        <tr>
+            <td>{{ approver.name }}</td>
+            <td>{{ approver.position }}</td>
+            <td>{{ approver.status }}</td>
+            <td>{{ approver.dateApproved|format_datetime('%Y-%m-%d %H:%M') if approver.dateApproved else 'Pending' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <hr>
+    <h3>Cash Advance</h3>
+    {% if cash_advance %}
+    <table>
+        <tr>
+            <th>Meals Total:</th>
+            <td>
+                {% if travel_data.isInternational %}
+                    {% if cash_advance.meals.total.usd %}
+                        USD {{ cash_advance.meals.total.usd|currency }}
+                    {% else %}
+                        USD {{ cash_advance.meals.total|currency }}
+                    {% endif %}
+                {% else %}
+                    {% if cash_advance.meals.total.php %}
+                        PHP {{ cash_advance.meals.total.php|currency }}
+                    {% else %}
+                        PHP {{ cash_advance.meals.total|currency }}
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% if (verification and verification.hotel and verification.hotel.amount) or (cash_advance.hotel and cash_advance.hotel > 0) %}
+        <tr>
+            <th>Hotel Amount:</th>
+            <td>
+                {% if verification and verification.hotel and verification.hotel.amount %}
+                    PHP {{ verification.hotel.amount|currency }}
+                    {% if verification.hotel.paymentType %}
+                        ({{ verification.hotel.paymentType }})
+                    {% endif %}
+                {% endif %}
+                {% if cash_advance.hotel and cash_advance.hotel > 0 %}
+                    {% if verification and verification.hotel and verification.hotel.amount %}<br>{% endif %}
+                    PHP {{ cash_advance.hotel|currency }}
+                    {% if cash_advance.hotelPaymentType %}
+                        ({{ cash_advance.hotelPaymentType }})
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        <tr>
+            <th>Car Rental:</th>
+            <td>
+                {% if travel_data.carRentalRequested and travel_data.carRentalApproval %}
+                    {% if travel_data.carRentalApproval.paymentType == 'Cash' %}
+                        PHP {{ travel_data.carRentalApproval.amount|currency }} (Cash)
+                    {% else %}
+                        {{ travel_data.carRentalApproval.paymentType }}
+                    {% endif %}
+                {% else %}
+                    Not requested   
+                {% endif %}
+            </td>
+        </tr>
+        {% if cash_advance.transportation and cash_advance.transportation > 0 or (cash_advance.tnvsAmount and cash_advance.tnvsAmount > 0) %}
+        <tr>
+            <th>Transportation:</th>
+            <td>
+                {% if cash_advance.transportation and cash_advance.transportation > 0 %}
+                    PHP {{ cash_advance.transportation|currency }}
+                {% endif %}
+                {% if cash_advance.tnvsAmount and cash_advance.tnvsAmount > 0 %}
+                    {% if cash_advance.transportation and cash_advance.transportation > 0 %}<br>{% endif %}
+                    TNVS: PHP {{ cash_advance.tnvsAmount|currency }}
+                    {% if cash_advance.tnvsPaymentType %}
+                        ({{ cash_advance.tnvsPaymentType }})
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        {% if cash_advance.miscellaneous and cash_advance.miscellaneous|length > 0 %}
+        <tr>
+            <th>Miscellaneous:</th>
+            <td>
+                {% for key, item in cash_advance.miscellaneous.items() %}
+                    {{ item.label }}: PHP {{ item.amount|currency }}<br>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endif %}
+
+        <tr><th>Details:</th><td>{{ cash_advance.details }}</td></tr>
+        <tr><th>Status:</th><td>{{ cash_advance.status }}</td></tr>
+    </table>
+    {% else %}
+    <p>No cash advance filed for this TOA.</p>
+    {% endif %}
+    <hr>
+    <h3>Verification</h3>
+    {% if verification %}
+    <table>
+        <tr><th>Verified By:</th><td>{{ verification.verifierName }}</td></tr>
+        <tr><th>Status:</th><td>{{ verification.verificationStatus }}</td></tr>
+        <tr><th>Remarks:</th><td>{{ verification.remarks }}</td></tr>
+        <tr><th>Hotel:</th><td>{{ verification.hotel.name }} ({{ verification.hotel.location }})</td></tr>
+        <tr><th>Flight Departure:</th><td>{{ verification.flightDetails.departure|format_datetime('%Y-%m-%d %H:%M') }}</td></tr>
+        <tr><th>Flight Arrival:</th><td>{{ verification.flightDetails.arrival|format_datetime('%Y-%m-%d %H:%M') }}</td></tr>
+    </table>
+    {% else %}
+    <p>No verification required or not yet completed.</p>
+    {% endif %}
+</div>
+{% endblock %}
+</body>
+</html>

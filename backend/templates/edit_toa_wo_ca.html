@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Travel Order Authority</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+        <form id="edit-toa-wo-ca-form">
+            <input type="hidden" id="toaNumber" name="toaNumber" value="{{ toa_number }}">
+            <input type="hidden" id="user_employeeId" value="{{ user_data.employeeId }}">
+            <input type="hidden" id="user_fullName" value="{{ user_data.fullName }}">
+            <input type="hidden" id="user_department" value="{{ user_data.department }}">
+            <input type="hidden" id="user_position" value="{{ user_data.position }}">
+
+            <div class="form">
+                <header>
+                    <strong class="head-text">Edit Travel Order Authority</strong>
+                </header>
+
+                <!-- Travel Details Section -->
+                <div class="fields travel-details">
+                    <div class="field-right">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Date Filed</label>
+                            <input id="dateFiled" name="dateFiled" class="subhead-text" type="datetime-local" value="{{ travel.dateFiled|default('') }}" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee ID</label>
+                            <input id="employeeId" name="employeeId" class="subhead-text" type="text" value="{{ travel.employeeId|default('') }}"readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee Name</label>
+                            <input id="employeeName" name="employee" class="subhead-text" type="text" value="{{ travel.employee|default('') }}"readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Department/Section</label>
+                            <input id="department" name="department" class="subhead-text" type="text" value="{{ travel.department|default('') }}"readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Position</label>
+                            <input id="position" name="position" class="subhead-text" type="text" value="{{ travel.position|default('') }}"readonly>
+                        </div>
+                    </div>
+                    <div class="field-left">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Travel Type</label>
+                            <select class="subhead-text" name="travelType" id="travel-type" required>
+                                <option value="1" {% if travel.travelType == "1" %}selected{% endif %}>Select Travel type</option>
+                                <option value="2" {% if travel.travelType == "2" %}selected{% endif %}>International</option>
+                                <option value="3" {% if travel.travelType == "3" %}selected{% endif %}>Domestic</option>
+                            </select>
+                        </div>
+                        <div class="double-input-field">
+                            <div class="input-field">
+                                <label class="subhead-text bold">Start from</label>
+                                <input id="start-date" name="startDate" class="subhead-text" type="date" value="{{ travel.startDate|default('') }}" required>
+                            </div>
+                            <div class="input-field">
+                                <label class="subhead-text bold">End to</label>
+                                <input id="end-date" name="endDate" class="subhead-text" type="date" value="{{ travel.endDate|default('') }}" required>
+                            </div>
+                        </div>
+                        <div class="input-field" id="origin-container">
+                            <label class="subhead-text bold">Origin</label>
+                            <select class="subhead-text" name="origin" id="origin" required>
+                                <option value="">Select Origin</option>
+                                <option value="Batangas" {% if travel.origin == "Batangas" %}selected{% endif %}>Batangas</option>
+                                <option value="Bulacan" {% if travel.origin == "Bulacan" %}selected{% endif %}>Bulacan</option>
+                                <option value="Davao" {% if travel.origin == "Davao" %}selected{% endif %}>Davao</option>
+                                <option value="Manila" {% if travel.origin == "Manila" %}selected{% endif %}>Manila</option>
+                            </select>
+                        </div>
+                        <div id="destination-container">
+                            <!-- Domestic Destinations -->
+                            <div class="destination-container domestic" {% if travel.travelType != "3" %}style="display:none;"{% endif %}>
+                                <div class="input-field">
+                                    <div class="flex-justify-between">
+                                        <label class="subhead-text bold">Destination</label>
+                                        <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <input type="text" class="subhead-text dest" name="destination"
+                                        value="{% if travel.destinations and travel.destinations|length > 0 %}{{ travel.destinations[0] }}{% endif %}"
+                                        placeholder="Enter destination"
+                                        {% if travel.travelType == "3" %}required{% endif %}>
+                                </div>
+                                {% for dest in travel.destinations[1:] %}
+                                    {% if dest %}
+                                    <div class="input-field">
+                                        <div class="flex-justify-between">
+                                            <label class="subhead-text bold">Destination</label>
+                                            <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                                        </div>
+                                        <input type="text" class="subhead-text dest" name="destination" value="{{ dest }}" placeholder="Enter destination">
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <!-- International Destinations -->
+                            <div class="destination-container international" {% if travel.travelType != "2" %}style="display:none;"{% endif %}>
+                                <div class="input-field">
+                                    <div class="flex-justify-between">
+                                        <label class="subhead-text bold">Destination</label>
+                                        <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <input type="text" class="subhead-text dest" name="destination"
+                                        value="{% set non_empty_destinations = travel.destinations | select('string') | select | list %}{% if non_empty_destinations|length > 0 %}{{ non_empty_destinations[0] }}{% endif %}"
+                                        placeholder="Enter destination"
+                                        {% if travel.travelType == "2" %}required{% endif %}>
+                                </div>
+                                {% set non_empty_destinations = travel.destinations | select('string') | select | list %}
+                                {% for dest in non_empty_destinations[1:] %}
+                                    <div class="input-field">
+                                        <div class="flex-justify-between">
+                                            <label class="subhead-text bold">Destination</label>
+                                            <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                                        </div>
+                                        <input type="text" class="subhead-text dest" name="destination" value="{{ dest }}" placeholder="Enter destination">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="services-container">
+                            <label class="subhead-text bold">Services Required</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="hotel-required" name="requiresHotel" value="hotel" {% if travel.requiresHotel %}checked{% endif %}>
+                                    <span>Hotel Accommodation</span>
+                                </label>
+                            </div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="transport-required" name="requiresTransportation" value="transportation" {% if travel.requiresTransportation %}checked{% endif %}>
+                                    <span>Transportation</span>
+                                </label>
+                                <div id="travel-mode-options" class="travel-mode-options" style="display: none; margin-left: 25px; margin-top: 10px;">
+                                    <label class="subhead-text bold">Mode of Travel</label>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="travelMode" id="travel-mode-air" value="air" {% if travel.travelMode == "air" %}checked{% endif %}> Air
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="travelMode" id="travel-mode-land" value="land" {% if travel.travelMode == "land" %}checked{% endif %}> Land
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="transport-options" class="transport-options" style="display: none; margin-left: 25px; margin-top: 10px;">
+                                    <label class="subhead-text bold">Transportation Services</label>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transportationTypes" value="car-service" {% if "car-service" in travel.transportationTypes %}checked{% endif %}>
+                                            <span>Company Car</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transportationTypes" value="grab" {% if "grab" in travel.transportationTypes %}checked{% endif %}>
+                                            <span>TNVS/PUV</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="checkbox-group" style="margin-top: 20px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="carRentalRequested" id="car-rental-request" value="car-rental-request" {% if travel.carRentalRequested %}checked{% endif %}>
+                                        <span>Do you want to request a Car Rental?</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purpose / Justification Section -->
+                <div class="purpose-container">
+                    <header>
+                        <p class="subhead-text">Request for authority to travel officially</p>
+                    </header>
+                    <div class="purpose">
+                        <div class="purpose-content">
+                            <div class="fields">
+                                <div class="input-field">
+                                    <label class="title-text bold">A. Purpose / Justification</label>
+                                    <textarea class="subhead-text" name="purpose" rows="4" required>{{ travel.purpose|default('') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="itenirary-container" class="itenirary-container hide">
+                        <div class="detailed-itenirary">
+                            <div class="itenirary-content">
+                                <label class="title-text bold head">B. Detailed Itinerary</label>
+                                <table class="itinerary-table">
+                                    <thead id="itinerary-header">
+                                        <!-- Will be filled by JS -->
+                                    </thead>
+                                    <tbody id="itenirary-holder">
+                                        <!-- Will be filled by JS -->
+                                    </tbody>
+                                </table>
+                                
+                               
+
+                            </div>
+                        </div>
+                    </div>
+
+                <!-- Approvers Table (read-only) -->
+                <div class="summary">
+                    <label class="title-text bold">C. Approvers</label>
+                    <div class="summary-content">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Status</th>
+                                    <th>Date Approved</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approver-table-body">
+                                {% for approver in travel.approvers %}
+                                <tr>
+                                    <td>{{ approver.name }}</td>
+                                    <td>{{ approver.position }}</td>
+                                    <td>{{ approver.status }}</td>
+                                    <td>
+                                    {% if approver.dateApproved %}
+                                        {{ approver.dateApproved|format_datetime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="button-container">
+                    <div class="right-section">
+                        <div class="btn-holder flex-justify-end">
+                            <button id="submit-btn" class="btn-submit" type="submit" value="submit">Save Changes</button>
+                            <a href="/home" class="btn-cancel">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    <script>
+        // Add/remove destination logic (same as index.html)
+        $('.add').click(function () {
+            var container = $(this).closest('.destination-container');
+            var maxDestinations = 4;
+            if (container.children('.input-field').length >= maxDestinations) {
+                alert("Maximum number of destinations reached (" + maxDestinations + ").");
+                return;
+            }
+            if (confirm("Do you want to add a destination?")) {
+                var newDestination = `
+                    <div class="input-field">
+                        <div class="flex-justify-between">
+                            <label class="subhead-text bold">Destination</label>
+                            <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                        </div>
+                        <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination">
+                    </div>
+                `;
+                container.append(newDestination);
+            }
+        });
+        $(document).on('click', '.remove', function () {
+            var confirmation = confirm("Do you want to remove this destination?");
+            if (confirmation) {
+                $(this).closest('.input-field').remove();
+            }
+        });
+        
+        var initialItinerary = {{ travel.itinerary|tojson|safe if travel.itinerary else '[]' }};
+        
+
+        $(document).ready(function() {
+            function toggleItineraryTable() {
+                var startDate = $('#start-date').val();
+                var endDate = $('#end-date').val();
+                if (startDate && endDate) {
+                    $('#itenirary-container').removeClass('hide').show();
+                } else {
+                    $('#itenirary-container').addClass('hide').hide();
+                }
+            }
+            generateItineraryRows(initialItinerary);
+
+            // Parse existing itinerary from backend (if available)
+           
+
+            // On date change, always regenerate rows for the new range
+            $('#start-date, #end-date').on('change', function() {
+                // Only use initialItinerary on first load, not after date change
+                generateItineraryRows([]);
+                toggleItineraryTable();
+            });
+
+
+            toggleItineraryTable();
+        });
+
+        function generateItineraryRows(existingItinerary) {
+            var startDate = $('#start-date').val();
+            var endDate = $('#end-date').val();
+            var tbody = $('#itenirary-holder');
+            tbody.empty();
+
+            if (!startDate || !endDate) return;
+
+            var start = new Date(startDate);
+            var end = new Date(endDate);
+
+            var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            var i = 0;
+            for (var d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                var day = dayNames[d.getDay()];
+                var dateStr = d.toLocaleDateString('en-GB'); // format: dd/mm/yyyy
+
+                // Try to find existing itinerary for this date
+                var existing = null;
+                if (existingItinerary) {
+                    existing = existingItinerary.find(item => item.date === dateStr);
+                }
+
+                tbody.append(`
+                    <tr>
+                        <td>${day}</td>
+                        <td>${dateStr}</td>
+                        <td><input type="checkbox" name="breakfast_${i}" ${existing ? (existing.meals.breakfast ? 'checked' : '') : 'checked'}></td>
+                        <td><input type="checkbox" name="lunch_${i}" ${existing ? (existing.meals.lunch ? 'checked' : '') : 'checked'}></td>
+                        <td><input type="checkbox" name="dinner_${i}" ${existing ? (existing.meals.dinner ? 'checked' : '') : 'checked'}></td>
+                        <td><input type="text" name="activity_${i}" value="${existing ? existing.meals.activity : ''}"></td>
+                    </tr>
+                `);
+                i++;
+            }
+        }
+
+        function updateItineraryTableHeader() {
+            var travelType = document.getElementById("travel-type").value;
+            var header = document.getElementById("itinerary-header");
+
+                header.innerHTML = `
+                    <tr>
+                        <th>Day</th>
+                        <th>Date</th>
+                        <th>Breakfast</th>
+                        <th>Lunch</th>
+                        <th>Dinner</th>
+                        <th>Activity</th>
+                    </tr>
+                `;
+        
+        }
+        document.getElementById("travel-type").addEventListener("change", updateItineraryTableHeader);
+        document.addEventListener("DOMContentLoaded", updateItineraryTableHeader);
+
+        function toggleDestinationContainer() {
+            var selectedTravelType = $("#travel-type").val();
+            $(".destination-container.domestic").toggle(selectedTravelType === "3");
+            $(".destination-container.international").toggle(selectedTravelType === "2");
+        }
+        $("#travel-type").on("change", toggleDestinationContainer);
+        $(document).ready(toggleDestinationContainer);
+
+
+        // Show/hide transportation options
+        $('#transport-required').change(function() {
+            var travelType = $('#travel-type').val();
+            if($(this).is(':checked')) {
+                $('#travel-mode-options').slideDown();
+                $('#transport-options').slideUp();
+            } else {
+                $('#travel-mode-options').slideUp();
+                $('#transport-options').slideUp();
+            }
+        });
+        $('input[name="travelMode"]').change(function() {
+            $('#transport-options').slideDown();
+        });
+
+        // Form submission logic (AJAX)
+        $('#edit-toa-wo-ca-form').on('submit', function(e) {
+            e.preventDefault();
+            const formData = {};
+            $(this).serializeArray().forEach(function(item) {
+                if (formData[item.name]) {
+                    if (!Array.isArray(formData[item.name])) {
+                        formData[item.name] = [formData[item.name]];
+                    }
+                    formData[item.name].push(item.value);
+                } else {
+                    formData[item.name] = item.value;
+                }
+            });
+            formData.requiresHotel = $('#hotel-required').is(':checked');
+            formData.requiresTransportation =  $('#transport-required').is(':checked');
+            formData.destinations = [];
+            $('.destination-container:visible .dest').each(function() {
+                if ($(this).val()) formData.destinations.push($(this).val());
+            });
+            formData.transportationTypes = [];
+            $('#transport-options input[type="checkbox"]:checked').each(function() {
+                formData.transportationTypes.push($(this).val());
+            });
+            formData.carRentalRequested = $('#car-rental-request').is(':checked');
+
+            formData.itinerary = [];
+            $('#itenirary-holder tr').each(function(index) {
+                var day = $(this).find('td').eq(0).text();
+                var date = $(this).find('td').eq(1).text();
+                var breakfast = $(this).find('input[name^="breakfast"]').is(':checked');
+                var lunch = $(this).find('input[name^="lunch"]').is(':checked');
+                var dinner = $(this).find('input[name^="dinner"]').is(':checked');
+                var activity = $(this).find('input[name^="activity"]').val();
+                formData.itinerary.push({
+                    day: day,
+                    date: date,
+                    meals: {
+                        breakfast: breakfast,
+                        lunch: lunch,
+                        dinner: dinner,
+                        activity: activity
+                    }
+                });
+            });
+            console.log(formData); 
+
+            $.ajax({
+                url: '/api/travel/{{ toa_number }}/update-wo-ca',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    alert('TOA updated successfully!');
+                    window.location.href = '/home';
+                },
+                error: function(error) {
+                    alert('Error updating TOA.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

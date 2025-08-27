@@ -1,0 +1,169 @@
+openapi: 3.0.0
+info:
+  title: Travel Authority API
+  description: API documentation for the Travel Authority application
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+paths:
+  /api/travel:
+    get:
+      summary: Get all travel requests
+      responses:
+        '200':
+          description: A list of travel requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Travel'
+    post:
+      summary: Create a new travel request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Travel'
+      responses:
+        '201':
+          description: Travel request created
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/travel/{id}:
+    get:
+      summary: Get a travel request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A travel request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Travel'
+    put:
+      summary: Update a travel request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Travel'
+      responses:
+        '200':
+          description: Travel request updated
+    delete:
+      summary: Delete a travel request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Travel request deleted
+components:
+  schemas:
+    Travel:
+      type: object
+      properties:
+        id:
+          type: string
+        dateFiled:
+          type: string
+          format: date
+        travelType:
+          type: string
+        employee:
+          type: string
+        department:
+          type: string
+        position:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        origin:
+          type: string
+        destinations:
+          type: array
+          items:
+            type: string
+        purpose:
+          type: string
+        expenses:
+          type: object
+          properties:
+            breakfast:
+              type: number
+            lunch:
+              type: number
+            dinner:
+              type: number
+            hotel:
+              type: number
+            other:
+              type: number
+            cashAdvance:
+              type: number
+        approvalStatus:
+          type: string
+        remarks:
+          type: string
+        itinerary:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              day:
+                type: string
+              dateType:
+                type: string
+              meals:
+                type: object
+                properties:
+                  breakfast:
+                    type: boolean
+                  lunch:
+                    type: boolean
+                  dinner:
+                    type: boolean
+              activity:
+                type: string
+        approvers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              position:
+                type: string
+              status:
+                type: string
+              dateApproved:
+                type: string
+                format: date-time
+              remarks:
+                type: string

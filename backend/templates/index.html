@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Travel Order Authority</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+    
+        <form action="#">
+            <!-- Hidden Inputs -->
+            <input type="hidden" id="toaNumber" name="toaNumber">
+            <input type="hidden" id="user_employeeId" value="{{ user_data.employeeId }}">
+            <input type="hidden" id="user_fullName" value="{{ user_data.fullName }}">
+            <input type="hidden" id="user_department" value="{{ user_data.department }}">
+            <input type="hidden" id="user_position" value="{{ user_data.position }}">
+            <input type="hidden" id="requiresCashAdvance" name="requiresCashAdvance" value="false">
+    
+            <div class="form">
+                <header>
+                    <strong class="head-text">Travel Order Authority</strong>
+                </header>
+    
+                <!-- Travel Details Section -->
+                <div class="fields travel-details">
+                    <div class="field-right">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Date Filed</label>
+                            <input id="dateFiled" class="subhead-text" type="datetime-local" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee ID</label>
+                            <input id="employeeId" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Employee Name</label>
+                            <input id="employeeName" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Department/Section</label>
+                            <input id="department" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Position</label>
+                            <input id="position" class="subhead-text" type="text" readonly>
+                        </div>
+                        <div class="input-field">
+                            <label class="subhead-text bold">Payment Method (Without Cash Advance)</label>
+                            <select class="subhead-text" id="payment-method" name="payment-method">
+                                <option value="">Select Payment Method</option>
+                                <option value="credit-card">Credit Card</option>
+                                <option value="proposed-budget">Proposed Budget</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-left">
+                        <div class="input-field">
+                            <label class="subhead-text bold">Travel Type</label>
+                            <select class="subhead-text" name="travel-type" id="travel-type" required>
+                                <option value="1">Select Travel type</option>
+                                <option value="2">International</option>
+                                <option value="3">Domestic</option>
+                            </select>
+                        </div>
+                        <div class="double-input-field">
+                            <div class="input-field">
+                                <label class="subhead-text bold">Start from</label>
+                                <input id="start-date" class="subhead-text" type="date" onkeydown="return false" required>
+                            </div>
+                            <div class="input-field">
+                                <label class="subhead-text bold">End to</label>
+                                <input id="end-date" class="subhead-text" type="date" onkeydown="return false" required>
+                            </div>
+                        </div>
+
+                        <div class="input-field" id="origin-container">
+                            <label class="subhead-text bold">Origin</label>
+                            <select class="subhead-text" name="origin" id="origin" required>
+                                <option value="">Select Origin</option>
+                                <option value="Batangas">Batangas</option>
+                                <option value="Bulacan">Bulacan</option>
+                                <option value="Davao" >Davao</option>
+                                <option value="Manila">Manila</option>
+                            </select>
+                        </div>
+                        
+                        <div id="destination-container">
+                            <!-- Domestic Destination -->
+                            <div class="destination-container domestic">
+                                <div class="input-field">
+                                    <div class="flex-justify-between">
+                                        <label class="subhead-text bold">Destination</label>
+                                        <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination" required>
+                                </div>
+                            </div>
+                        
+                            <!-- International Destination -->
+                            <div class="destination-container international">
+                                <div class="input-field">
+                                    <div class="flex-justify-between">
+                                        <label class="subhead-text bold">Destination</label>
+                                        <a class="btn add subhead-text"><i class="fas fa-plus"></i> Add</a>
+                                    </div>
+                                    <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination" required>
+                                </div>
+                            </div>
+                        
+                        </div>
+                        <!-- Services Required -->
+                        <div class="services-container">
+                            <label class="subhead-text bold">Services Required (With Cash Advance)</label>
+                            
+                            <!-- Hotel Checkbox -->
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="hotel-required" name="services[]" value="hotel"> 
+                                    <span>Hotel Accommodation</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Transportation Checkbox -->
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="transport-required" name="services[]" value="transportation"> 
+                                    <span>Transportation</span>
+                                </label>
+                                
+                                <!-- Mode of Travel (initially hidden) -->
+                                <div id="travel-mode-options" class="travel-mode-options" style="display: none; margin-left: 25px; margin-top: 10px;">
+                                    <label class="subhead-text bold">Mode of Travel</label>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="travel-mode" id="travel-mode-air" value="air"> Air
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="travel-mode" id="travel-mode-land" value="land"> Land
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Transportation Options (shown only for land travel) -->
+                                <div id="transport-options" class="transport-options" style="display: none; margin-left: 25px; margin-top: 10px;">
+                                    <label class="subhead-text bold">Transportation Services</label>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="car-service">
+                                            <span>Issued Company Car</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="common-car">
+                                            <span>Company Common Car</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="transport-type[]" value="grab">
+                                            <span>TNVS/PUV</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="checkbox-group" style="margin-top: 20px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox"  name="transport-type[]" id="car-rental-request" value="car-rental-request">
+                                        <span>Do you want to request a Car Rental?</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Purpose / Justification Section -->
+                <div class="purpose-container">
+                    <header>
+                        <p class="subhead-text">Request for authority to travel officially</p>
+                    </header>
+                    <div class="purpose">
+                        <div class="purpose-content">
+                            <div class="fields">
+                                <div class="input-field">
+                                    <label class="title-text bold">A. Purpose / Justification</label>
+                                    <textarea class="subhead-text" rows="4" placeholder="Type your purpose / justification here" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>    
+                
+                <div>
+                    <footer style="width: 80%; margin: 0 auto; margin-top: 15px;">
+                        <p class="subhead-text text-start">
+                            <span class="title-text bold">Note:</span>
+                            <br>*The employees shall prepare the expense report to liquidate the above cash advance with four (4) days after the arrival from trip. 
+                            <br> *Employee will not be permitted to travel if the previous TOA Liquidation / Due settled. 
+                            <br> *Failure to liquidate within prescribed period shall mean automatic salary deduction and subject to disciplinary action.
+                        </p>
+                    </footer>
+
+                                         
+                </div>
+                
+                    <div id="itenirary-container" class="itenirary-container hide">
+                        <div class="detailed-itenirary">
+                            <div class="itenirary-content">
+                                <label class="title-text bold head">B. Detailed Itinerary</label>
+                                <table class="itinerary-table">
+                                    <thead id="itinerary-header">
+                                        <!-- Will be filled by JS -->
+                                    </thead>
+                                    <tbody id="itenirary-holder">
+                                        <!-- Will be filled by JS -->
+                                    </tbody>
+                                </table>
+                                
+                               
+
+                            </div>
+                        </div>
+                    </div>
+
+                <div class="summary">
+                    <label class="title-text bold">C. Approvers</label>
+                    <div class="summary-content">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Status</th>
+                                    <th>Date Approved</th>
+                                  </tr>
+                            </thead>                         
+                            <tbody id="approver-table-body">
+                                
+                            </tbody>
+                        </table>
+                        
+                    </div>
+                </div>
+    
+                <!-- Buttons -->
+                <div class="button-container">
+                    <div class="left-section">
+                        <a href="/logout" class="btn-submit logout-button">Logout</a>
+                        <a href="{{ url_for('homepage') }}" class="btn-submit home-button" style="margin-left: 10px;">Home</a>
+                    </div>
+                    <div class="right-section">
+                        <div class="btn-holder flex-justify-end">
+                            <button id="submit-btn"class="btn-submit" type="submit" value="submit">Submit</button>
+                            <button type="button" class="btn-proceed"id="proceed-cash-advance-btn">Proceed to CA</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+  
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div class="fields">
+                <div class="input-field">
+                    <label class="title-text bold">Remarks</label>
+                    <textarea id="modal-textarea" class="subhead-text" rows="4" placeholder="Remarks ..."></textarea>
+                    <div class="flex-justify-end">
+                        <button id="modal-submit" class="btn-submit">Okay</button>
+                    </div>
+                </div>
+            </div>               
+        </div>
+    </div>
+
+    
+    
+    
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+   
+   <script>
+    function printPage() {
+        event.preventDefault();
+        window.print();
+        }
+    $(document).ready(function() {
+        
+        $('#employeeId').val($('#user_employeeId').val());
+        $('#employeeName').val($('#user_fullName').val());
+        $('#department').val($('#user_department').val());
+        $('#position').val($('#user_position').val());
+
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = ('0' + (now.getMonth() + 1)).slice(-2);
+        var day = ('0' + now.getDate()).slice(-2);
+        var hours = ('0' + now.getHours()).slice(-2);
+        var minutes = ('0' + now.getMinutes()).slice(-2);
+        var formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+        $('#dateFiled').val(formattedDate);
+
+        var maxDestinations = 4;
+
+        // Add new destination input
+        $('.add').click(function () {
+            var container = $(this).closest('.destination-container');
+            if (container.children('.input-field').length >= maxDestinations) {
+                alert("Maximum number of destinations reached (" + maxDestinations + ").");
+                return;
+            }
+
+            if (confirm("Do you want to add a destination?")) {
+                var newDestination = `
+                    <div class="input-field">
+                        <div class="flex-justify-between">
+                            <label class="subhead-text bold">Destination</label>
+                            <a class="btn remove subhead-text"><i class="fa-solid fa-trash-can"></i> Delete</a>
+                        </div>
+                        <input type="text" class="subhead-text dest" name="destination" placeholder="Enter destination">
+                    </div>
+                `;
+                container.append(newDestination);
+            }
+        });
+
+        // Remove destination input
+        $(document).on('click', '.remove', function () {
+            var confirmation = confirm("Do you want to remove this destination?");
+            if (confirmation) {
+                $(this).closest('.input-field').remove();
+            }
+        });
+
+
+        
+    });
+
+
+    function toggleDestinationContainer() {
+    var selectedTravelType = document.getElementById("travel-type").value;
+    var originContainer = document.getElementById("origin-container");
+    var domesticContainer = document.querySelector(".destination-container.domestic");
+    var internationalContainer = document.querySelector(".destination-container.international");
+
+
+    // Hide all containers first
+    originContainer.style.display = "none";
+    domesticContainer.style.display = "none";
+    internationalContainer.style.display = "none";
+
+    // Remove the `required` attribute from all destination inputs
+    document.querySelectorAll(".destination-container input[name='destination']").forEach(input => {
+        input.removeAttribute("required");
+    });
+
+    // Show relevant containers based on travel type
+    if (selectedTravelType === "1") {
+        // Do nothing, all containers hidden
+    } else if (selectedTravelType === "2") {
+        originContainer.style.display = "flex";
+        internationalContainer.style.display = "block";
+
+        // Set currency to USD for international travel
+
+        // Add `required` to visible destination inputs
+        internationalContainer.querySelectorAll("input[name='destination']").forEach(input => {
+                input.setAttribute("required", "required");
+        });
+
+    } else if (selectedTravelType === "3") {
+        originContainer.style.display = "flex";
+        domesticContainer.style.display = "block";
+
+        // Set currency to PHP for domestic travel
+    }
+
+
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentMethodDropdown = document.getElementById('payment-method');
+        const servicesContainer = document.querySelector('.services-container');
+        const serviceInputs = servicesContainer.querySelectorAll('input, select, textarea, button');
+
+        function toggleServicesContainer() {
+            if (paymentMethodDropdown.value) {
+                servicesContainer.classList.add('disabled');
+                serviceInputs.forEach(el => {
+                    el.disabled = true;
+                });
+            } else {
+                servicesContainer.classList.remove('disabled');
+                serviceInputs.forEach(el => {
+                    el.disabled = false;
+                });
+            }
+        }
+
+        paymentMethodDropdown.addEventListener('change', toggleServicesContainer);
+        toggleServicesContainer();
+
+        serviceInputs.forEach(el => {
+            el.addEventListener('change', function() {
+                let anyChecked = false;
+                serviceInputs.forEach(input => {
+                    if ((input.type === 'checkbox' || input.type === 'radio') && input.checked) {
+                        anyChecked = true;
+                    }
+                });
+                paymentMethodDropdown.disabled = anyChecked;
+                if (anyChecked) {
+                    paymentMethodDropdown.classList.add('disabled');
+                } else {
+                    paymentMethodDropdown.classList.remove('disabled');
+                }
+            });
+        });
+    });
+
+    function updateOriginOptions() {
+        const travelType = document.getElementById("travel-type").value;
+        const originDropdown = document.getElementById("origin");
+
+        // Clear all existing options
+        originDropdown.innerHTML = "";
+
+        if (travelType === "2") { // International travel
+            // Add only Manila as the origin option
+            const manilaOption = document.createElement("option");
+            manilaOption.value = "Manila";
+            manilaOption.textContent = "Manila";
+            originDropdown.appendChild(manilaOption);
+        } else {
+            // Add all origin options for other travel types
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Origin";
+            originDropdown.appendChild(defaultOption);
+
+            const origins = ["Manila", "Batangas", "Bulacan", "Davao"];
+            origins.forEach(origin => {
+                const option = document.createElement("option");
+                option.value = origin;
+                option.textContent = origin;
+                originDropdown.appendChild(option);
+            });
+        }
+    }
+    document.getElementById("travel-type").addEventListener("change", function () {
+        updateOriginOptions();
+        toggleDestinationContainer();
+        toggleServicesForTravelType();
+    }); 
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        updateOriginOptions();
+        toggleServicesForTravelType();
+    });
+    // Attach the onchange event to the travel type dropdown
+    document.getElementById("travel-type").onchange = toggleDestinationContainer;
+
+    // Initialize the correct container and currency on page load
+    toggleDestinationContainer();
+
+    $('#transport-required').change(function() {
+    var travelType = $('#travel-type').val();
+    if($(this).is(':checked')) {
+        if(travelType === "4") { // Official Business
+            $('#travel-mode-options').hide();
+            $('#transport-options').slideDown();
+        } else {
+            $('#travel-mode-options').slideDown();
+            $('input[name="travel-mode"]').prop('checked', false);
+            $('#transport-options').slideUp();
+        }
+    } else {
+        $('#travel-mode-options').slideUp();
+        $('#transport-options').slideUp();
+        $('input[name="travel-mode"]').prop('checked', false);
+        $('#transport-options input[type="checkbox"]').prop('checked', false);
+    }
+});
+
+// Show/hide transportation service options based on travel mode selection
+$('input[name="travel-mode"]').change(function() {
+    // Always show transportation options regardless of mode (air or land)
+    $('#transport-options').slideDown();
+    
+    // Clear previous selections when changing modes
+    $('#transport-options input[type="checkbox"]').prop('checked', false);
+});
+
+
+$('form').submit(function(e) {
+    var travelType = $('#travel-type').val();
+
+    // Check if transportation is required but no travel mode is selected
+    if($('#transport-required').is(':checked') && !$('input[name="travel-mode"]:checked').val()) {
+        alert('Please select a mode of travel (Air or Land).');
+        e.preventDefault();
+        return false;
+    }
+    
+    // Check if land travel is selected but no transportation service is selected
+    if($('#travel-mode-land').is(':checked') && !$('#transport-options input[type="checkbox"]:checked').length) {
+        alert('Please select at least one transportation service.');
+        e.preventDefault();
+        return false;
+    }
+    
+    // Continue with form submission if validation passes
+});
+ 
+function updateSubmitButtonState() {
+    const hotelRequired = document.getElementById('hotel-required');
+    const transportRequired = document.getElementById('transport-required');
+    const submitBtn = document.getElementById('submit-btn');
+    if (!submitBtn) return;
+
+    // Disable if either is checked
+    if ((hotelRequired && hotelRequired.checked) || (transportRequired && transportRequired.checked)) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('disabled');
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('disabled');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodDropdown = document.getElementById('payment-method');
+    const proceedCAButton = document.getElementById('proceed-cash-advance-btn');
+
+    function toggleProceedCAButton() {
+        if (paymentMethodDropdown.value) {
+            proceedCAButton.disabled = true;
+            proceedCAButton.classList.add('disabled');
+        } else {
+            proceedCAButton.disabled = false;
+            proceedCAButton.classList.remove('disabled');
+        }
+    }
+
+    paymentMethodDropdown.addEventListener('change', toggleProceedCAButton);
+    toggleProceedCAButton(); // Initial check
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const hotelRequired = document.getElementById('hotel-required');
+    const transportRequired = document.getElementById('transport-required');
+    if (hotelRequired) hotelRequired.addEventListener('change', updateSubmitButtonState);
+    if (transportRequired) transportRequired.addEventListener('change', updateSubmitButtonState);
+    updateSubmitButtonState(); // Initial check
+});
+
+function toggleServicesForTravelType() {
+    var travelType = document.getElementById("travel-type").value;
+    var hotelCheckbox = document.getElementById("hotel-required");
+    var transportCheckbox = document.getElementById("transport-required");
+    var hotelGroup = hotelCheckbox.closest('.checkbox-group');
+    var transportGroup = transportCheckbox.closest('.checkbox-group');
+
+        hotelGroup.style.display = "block";
+        transportGroup.style.display = "block";
+}
+
+function updateItineraryTableHeader() {
+    var travelType = document.getElementById("travel-type").value;
+    var header = document.getElementById("itinerary-header");
+
+        header.innerHTML = `
+            <tr>
+                <th>Day</th>
+                <th>Date</th>
+                <th>Breakfast</th>
+                <th>Lunch</th>
+                <th>Dinner</th>
+                <th>Activity</th>
+            </tr>
+        `;
+    // Optionally, update the body rows to match columns (if you generate rows dynamically)
+}
+document.getElementById("travel-type").addEventListener("change", updateItineraryTableHeader);
+document.addEventListener("DOMContentLoaded", updateItineraryTableHeader);
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const travelTypeInput = document.getElementById('travel-type');
+    const employeeIdInput = document.getElementById('employeeId');
+    const isInternational = document.getElementById('travel-type').value === "2";
+
+    function updateApproverTableAjax() {
+        const travelType = travelTypeInput.value;
+        const isInternational = travelType === "2";
+        const employeeId = employeeIdInput.value;
+
+        fetch('/api/approvers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                employeeId: employeeId,
+                isInternational: isInternational
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const tableBody = document.getElementById('approver-table-body');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            data.approvers.forEach((approver, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${approver.name}</td>
+                    <td>${approver.position || approver.rank || ''}</td>
+                    <td>Pending</td>
+                    <td>Pending</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        });
+    }
+
+    // Update on change and on page load
+    travelTypeInput.addEventListener('change', updateApproverTableAjax);
+    updateApproverTableAjax();
+});
+
+
+</script>
+</body>
+</html>

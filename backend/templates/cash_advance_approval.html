@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Advance Approval</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .cash-advance-form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #004d40;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #004d40;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .approver-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .approver-table th {
+            background-color: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .approver-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .current-user-row {
+            background-color: #e8f5e9;
+        }
+
+        .submit-btn, .reject-btn, .print-btn, .send-btn {
+            background-color: #004d40;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+
+        .submit-btn:hover, .reject-btn:hover {
+            background-color: #00796b;
+        }
+
+        .reject-btn {
+            background-color: #d32f2f;
+        }
+
+        .reject-btn:hover {
+            background-color: #b71c1c;
+        }
+
+        .send-btn {
+            background-color: #d32f2f;
+        }
+
+        .send-btn:hover {
+            background-color: #b71c1c;
+        }
+
+        .print-btn {
+            background-color: #ff9800;
+            margin-left: 10px;
+        }
+
+        .print-btn:hover {
+            background-color: #fb8c00;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .details-table th {
+            background-color: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            width: 30%;
+            border: 1px solid #ddd;
+        }
+
+        .details-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        h3 {
+            color: #004d40;
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            background-color: #cccccc !important;
+            color: #666666 !important;
+            pointer-events: none;
+        }
+        
+        .approval-message {
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media print {
+            .submit-btn, .reject-btn, .print-btn, textarea, .remarks-section {
+                display: none !important;
+            }
+            
+            body * {
+                visibility: visible;
+            }
+            
+            .cash-advance-form {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+            }
+        }
+        .send-btn,
+        .btn.btn-warning {
+            background-color: #f0ad4e;
+            color: #fff;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            margin-bottom: 9px;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover,
+        .btn.btn-warning:hover {
+            background-color: #ec971f;
+            color: #fff;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+
+        <div class="cash-advance-form">
+            <div class="form-header">
+                <div class="form-title">CASH ADVANCE APPROVAL</div>
+                <div class="date-filed">
+                    <label>Filed Date:</label>
+                    <span>
+                    {% if cash_advance.requestDate %}
+                        {% if cash_advance.requestDate is string %}
+                            {{ cash_advance.requestDate.split('T')[0] if 'T' in cash_advance.requestDate else cash_advance.requestDate }}
+                        {% else %}
+                            {{ cash_advance.requestDate.strftime('%B %d, %Y') }}
+                        {% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <form id="cash-advance-approval-form">
+                <!-- TOA Information -->
+                <div class="form-section">
+                    <h3>TOA Summary</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="toa-number">TOA Number:</label>
+                            <input type="text" id="toa-number" value="{{ toa_number }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employee-name">Employee:</label>
+                            <input type="text" id="employee-name" value="{{ cash_advance.employeeName }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start-date">Start Date:</label>
+                            <input type="text" id="start-date" value="{{ travel_data.startDate }}" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="end-date">End Date:</label>
+                            <input type="text" id="end-date" value="{{ travel_data.endDate }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="purpose">Purpose:</label>
+                            <input type="text" id="purpose" value="{{ travel_data.purpose }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Advance Details -->
+                <div class="form-section">
+                    <h3>Cash Advance Details</h3>
+                    <table class="details-table">
+                        <tr>
+                            <th>Total Amount</th>
+                            <td id="total-amount">PHP {{ cash_advance.totalAmount }}</td>
+                        </tr>
+                        <tr>
+                            <th>Meals</th>
+                            <td>
+                                {% if cash_advance.meals and cash_advance.meals.detailed %}
+                                    {% set ns = namespace(breakfast_total=0, lunch_total=0, dinner_total=0) %}
+                                    {% for date, meal in cash_advance.meals.detailed.items() %}
+                                        {% set ns.breakfast_total = ns.breakfast_total + (meal.breakfast or 0) %}
+                                        {% set ns.lunch_total = ns.lunch_total + (meal.lunch or 0) %}
+                                        {% set ns.dinner_total = ns.dinner_total + (meal.dinner or 0) %}
+                                    {% endfor %}
+                                    {% if cash_advance.isInternational or travel_data.travelType == "2" %}
+                                        Breakfast: USD {{ ns.breakfast_total|currency }}<br>
+                                        Lunch: USD {{ ns.lunch_total|currency }}<br>
+                                        Dinner: USD {{ ns.dinner_total|currency }}
+                                    {% else %}
+                                        Breakfast: PHP {{ ns.breakfast_total|currency }}<br>
+                                        Lunch: PHP {{ ns.lunch_total|currency }}<br>
+                                        Dinner: PHP {{ ns.dinner_total|currency }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if (cash_advance.isInternational or travel_data.travelType == "2") and cash_advance.dailyAllowance %}
+                        <tr>
+                            <th>Daily Allowance</th>
+                            <td>
+                                {% if cash_advance.dailyAllowance is number or cash_advance.dailyAllowance is string %}
+                                    USD {{ cash_advance.dailyAllowance|currency }}
+                                {% elif cash_advance.dailyAllowance.usd is defined %}
+                                    USD {{ cash_advance.dailyAllowance.usd|currency }}
+                                    {% if cash_advance.dailyAllowance.days %}
+                                        ({{ cash_advance.dailyAllowance.days }} days)
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if cash_advance.hotel and cash_advance.hotel > 0 %}
+                        <tr>
+                            <th>Hotel</th>
+                            <td>PHP {{ cash_advance.hotel }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if cash_advance.transportation and cash_advance.transportation > 0 %}
+                        <tr>
+                            <th>Transportation</th>
+                            <td>PHP {{ cash_advance.transportation }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if cash_advance.miscellaneous %}
+                        <tr>
+                            <th>Miscellaneous</th>
+                            <td>
+                                {% for key, item in cash_advance.miscellaneous.items() %}
+                                    {{ item.label }}: PHP {{ item.amount }}<br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if cash_advance.details %}
+                        <tr>
+                            <th>Details</th>
+                            <td>{{ cash_advance.details }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+
+                <!-- Approvers Section -->
+                <div class="form-section">
+                    <h3>Approvers</h3>
+                    <table class="approver-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Date Approved</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approval-table-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Remarks Section for Rejection -->
+                <div class="form-group">
+                    <label for="remarks">Remarks (required):</label>
+                    <textarea id="remarks" class="form-control" required></textarea>
+                </div>
+                
+                <button id="approve-btn" class="submit-btn" type="button" onclick="approveCashAdvance()">Approve</button>
+                {% if approvers and approvers[0].employeeId == current_user.employeeId and approvers[0].status == 'Pending' %}
+                    <button id="reject-btn" class="reject-btn" type="button" onclick="rejectCashAdvance()">Reject</button>
+                {% endif %}
+                {% set is_current_approver = approvers | selectattr('employeeId', 'equalto', current_user.employeeId) | selectattr('status', 'equalto', 'Pending') | list | length > 0 %}
+                {% set is_first_approver = approvers and approvers[0].employeeId == current_user.employeeId and approvers[0].status == 'Pending' %}
+                {% if is_current_approver and not is_first_approver %}
+                    <button id="send-btn" class="btn btn-warning" type="button" onclick="sendBackRequest()">Send Back</button>
+                {% endif %}
+                <a href="/approval/{{ toa_number }}" class="submit-btn" style="background-color: #888; margin-left: 30px;">Back to TOA</a>
+                <a href="/logout" class="submit-btn" style="float: right; text-decoration: none;">Logout</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    var toaNumber = "{{ toa_number }}";
+    var currentUserEmployeeId = "{{ current_user.employeeId }}";
+    
+    // Format dates when page loads and check approval status
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format all date cells in the approvers table
+        const dateCells = document.querySelectorAll('#approval-table-body td:nth-child(4)');
+        dateCells.forEach(cell => {
+            if (cell.textContent !== 'Pending') {
+                cell.textContent = formatDateTime(cell.textContent);
+            }
+        });
+        
+        // Check if current user has already approved/rejected
+        checkCurrentUserStatus();
+    });
+    
+    function formatDateTime(dateString) {
+        if (!dateString) return 'Pending';
+        
+        if (typeof dateString === 'string') {
+            // Handle ISO date string format (with T separator)
+            if (dateString.includes('T')) {
+                const parts = dateString.split('T');
+                const datePart = parts[0];
+                const timePart = parts[1].split('.')[0]; // Remove milliseconds
+                return `${datePart} ${timePart}`;
+            } else {
+                return dateString;
+            }
+        } else {
+            return dateString;
+        }
+    }
+    
+    function checkCurrentUserStatus() {
+        // Find the current user's row by class
+        const currentUserRow = document.querySelector('.current-user-row');
+        if (currentUserRow) {
+            // Get the status cell (3rd column)
+            const statusCell = currentUserRow.querySelector('td:nth-child(3)');
+            if (statusCell && statusCell.textContent.trim() !== 'Pending') {
+                // User has already made a decision, disable buttons
+                disableApprovalButtons(`You have already ${statusCell.textContent.trim().toLowerCase()} this request.`);
+            }
+        }
+    }
+    
+    function disableApprovalButtons(message) {
+        // Get buttons
+        const approveBtn = document.getElementById('approve-btn');
+        const rejectBtn = document.getElementById('reject-btn');
+        
+        // Add disabled class and attributes
+        approveBtn.classList.add('btn-disabled');
+        rejectBtn.classList.add('btn-disabled');
+        
+        approveBtn.disabled = true;
+        rejectBtn.disabled = true;
+        
+        // Add message above buttons
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'approval-message';
+        messageDiv.style.backgroundColor = '#f8d7da';
+        messageDiv.style.color = '#721c24';
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '15px';
+        messageDiv.style.borderRadius = '4px';
+        messageDiv.style.textAlign = 'center';
+        messageDiv.textContent = message;
+        
+        // Insert before buttons
+        const buttonsContainer = approveBtn.parentElement;
+        buttonsContainer.insertBefore(messageDiv, approveBtn);
+    }
+    
+    function printPage() {
+        if (event) event.preventDefault();
+        window.print();
+        return false;
+    }
+    
+    function formatDateTime(dateString) {
+        if (!dateString) return 'Pending';
+        if (typeof dateString === 'string') {
+            // Handle ISO date string format (with T separator)
+            if (dateString.includes('T')) {
+                const parts = dateString.split('T');
+                const datePart = parts[0];
+                const timePart = parts[1].split('.')[0]; // Remove milliseconds
+                return `${datePart} ${timePart}`;
+            } else {
+                return dateString;
+            }
+        } else {
+            return dateString;
+        }
+    }
+
+    function updateApprovalTable() {
+        fetch(`/api/cash-advance/${toaNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('approval-table-body');
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
+                (data.approvers || []).forEach(approver => {
+                    const row = document.createElement('tr');
+                    row.className = (approver.employeeId === currentUserEmployeeId) ? 'current-user-row' : '';
+                    row.innerHTML = `
+                        <td>${approver.name}</td>
+                        <td>${approver.position || approver.rank || ''}</td>
+                        <td>${approver.status}</td>
+                        <td>${approver.dateApproved ? formatDateTime(approver.dateApproved) : 'Pending'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+    }
+
+    // Call on page load and after approve/reject
+    document.addEventListener('DOMContentLoaded', function() {
+        updateApprovalTable();
+    });
+
+    // After approve/reject, reload the table instead of the whole page
+    function approveCashAdvance() {
+        if (event) event.preventDefault();
+        if ($('#approve-btn').prop('disabled')) {
+            alert('You have already made a decision on this request.');
+            return false;
+        }
+        fetch(`/api/cash-advance/${toaNumber}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(`${data.message}`);
+            updateApprovalTable();
+            checkCurrentUserStatus();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while approving the request.');
+        });
+    }
+
+    function rejectCashAdvance() {
+        if (event) event.preventDefault();
+        if ($('#reject-btn').prop('disabled')) {
+            alert('You have already made a decision on this request.');
+            return false;
+        }
+        const remarks = document.getElementById('remarks').value;
+        if (!remarks.trim()) {
+            alert("Please provide remarks for rejection.");
+            return;
+        }
+        fetch(`/api/cash-advance/${toaNumber}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ remarks: remarks })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(`${data.message}`);
+            updateApprovalTable();
+            checkCurrentUserStatus();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while rejecting the request.');
+        });
+    }
+
+    function sendBackRequest() {
+        const remarks = document.getElementById('remarks').value.trim();
+        
+        if (!remarks) {
+            alert('Please enter remarks for sending back the request.');
+            return;
+        }
+        
+        fetch(`/api/cash-advance/${toaNumber}/send-back`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ remarks: remarks })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message || data.error);
+            if (!data.error) {
+                document.getElementById('send-btn').disabled = true;
+                updateApprovalTable();
+                checkCurrentUserStatus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while sending back the request.');
+        });
+    }
+</script>
+</body>
+</html>

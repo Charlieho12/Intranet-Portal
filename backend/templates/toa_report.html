@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}TOA Form{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f8f8f8; }
+        .print-btn { margin-bottom: 20px; }
+        @media print {
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+{% block content %}
+<div class="container">
+    <h2>Travel Order Authority (TOA) Form</h2>
+    <button onclick="window.print()" class="print-btn" style="float:right;">🖨️ Print</button>
+    <hr>
+    <h3>TOA Details</h3>
+    <table>
+        <tr><th>TOA Number:</th><td>{{ travel_data.toaNumber }}</td></tr>
+        <tr><th>Employee:</th><td>{{ travel_data.employee }}</td></tr>
+        <tr><th>Department:</th><td>{{ travel_data.department }}</td></tr>
+        <tr><th>Position:</th><td>{{ travel_data.position }}</td></tr>
+        <tr><th>Date Filed:</th><td>{{ travel_data.dateFiled | format_datetime('%Y-%m-%d %H:%M')}}</td></tr>
+        <tr><th>Start Date:</th><td>{{ travel_data.startDate|format_datetime('%Y-%m-%d') }}</td></tr>
+        <tr><th>End Date:</th><td>{{ travel_data.endDate|format_datetime('%Y-%m-%d') }}</td></tr>
+        <tr><th>Origin:</th><td>{{ travel_data.origin }}</td></tr>
+        <tr>
+            <th>Destinations:</th>
+            <td>
+                {% set filtered = [] %}
+                {% for dest in travel_data.destinations %}
+                    {% if dest.strip() %}
+                        {% set _ = filtered.append(dest.strip()) %}
+                    {% endif %}
+                {% endfor %}
+                {{ filtered | join(', ') }}
+            </td>
+        </tr>
+        <tr><th>Purpose:</th><td>{{ travel_data.purpose }}</td></tr>
+    </table>
+    <hr>
+    <h3>Approvers</h3>
+    <table>
+        <tr>
+            <th>Name</th><th>Position</th><th>Status</th><th>Date Approved</th>
+        </tr>
+        {% for approver in travel_data.approvers %}
+        <tr>
+            <td>{{ approver.name }}</td>
+            <td>{{ approver.position }}</td>
+            <td>{{ approver.status }}</td>
+            <td>{{ approver.dateApproved|format_datetime('%Y-%m-%d %H:%M') if approver.dateApproved else 'Pending' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}
+</body>
+</html>

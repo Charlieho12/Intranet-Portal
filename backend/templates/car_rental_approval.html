@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Rental Approval</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 1.1rem;
+        }
+        
+        .approval-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .card-header h2 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .card-header .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .card-body {
+            padding: 40px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .detail-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #4f46e5;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #4f46e5;
+        }
+        
+        .detail-item {
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .detail-value {
+            color: #1e293b;
+            font-size: 1.1rem;
+            padding: 8px 0;
+        }
+        
+        .travel-dates {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .date-box {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .passengers-list {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .passenger-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .passenger-item:last-child {
+            border-bottom: none;
+        }
+        
+        .passenger-number {
+            background: #4f46e5;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .form-section {
+            background: #f1f5f9;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-approve {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-reject {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-international {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .badge-domestic {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+        }
+        .editable-input {
+            padding: 8px 12px !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            font-size: 1rem !important;
+            transition: all 0.3s ease !important;
+            background: white !important;
+        }
+
+        .editable-input:focus {
+            outline: none !important;
+            border-color: #4f46e5 !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        }
+
+        .passenger-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .passenger-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .passenger-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-remove {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+        }
+
+        .btn-remove:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .passenger-counter {
+            background: #4f46e5;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-car"></i> Car Rental Approval</h1>
+            <div class="subtitle">Review and approve car rental request</div>
+        </div>
+        
+        <div class="approval-card">
+            <div class="card-header">
+                <div class="icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h2>Rental Request Details</h2>
+                <p>TOA Number: {{ travel.toaNumber }}</p>
+            </div>
+            
+            <div class="card-body">
+                <div class="details-grid">
+                    <!-- Employee Information -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-user"></i>
+                            Employee Information
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Employee Name</div>
+                            <div class="detail-value">{{ travel.employee }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Travel Type</div>
+                            <div class="detail-value">
+                                {% if travel.isInternational %}
+                                    <span class="status-badge badge-international">
+                                        <i class="fas fa-globe"></i> International
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge badge-domestic">
+                                        <i class="fas fa-map-marker-alt"></i> Domestic
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Travel Information -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-route"></i>
+                            Travel Information
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Travel Dates</div>
+                            <div class="detail-value">
+                                <div class="travel-dates">
+                                    <div class="date-box">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ travel.startDate.strftime('%b %d, %Y') }}
+                                    </div>
+                                    <i class="fas fa-arrow-right" style="color: #6b7280;"></i>
+                                    <div class="date-box">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ travel.endDate.strftime('%b %d, %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Origin</div>
+                            <div class="detail-value">
+                                <i class="fas fa-map-pin"></i> {{ travel.origin }}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Destination(s)</div>
+                            <div class="detail-value">
+                                <i class="fas fa-location-dot"></i>
+                                {% if travel.destinations is string %}
+                                    {{ travel.destinations.strip(', ') }}
+                                {% else %}
+                                    {% set filtered = [] %}
+                                    {% for dest in travel.destinations %}
+                                        {% if dest.strip() %}
+                                            {% set _ = filtered.append(dest.strip()) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ filtered | join(', ') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Car Rental Details -->
+                <div class="detail-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i>
+                        Car Rental Details
+                        <span style="font-size: 0.8rem; color: #6b7280; font-weight: normal;">(Editable)</span>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Number of Passengers</div>
+                        <div class="detail-value">
+                            <input type="number" 
+                                id="carRentalPeople" 
+                                name="carRentalPeople" 
+                                value="{{ travel.get('carRentalPeople', '') }}" 
+                                min="1" 
+                                max="20"
+                                class="editable-input"
+                                placeholder="Enter number of passengers"
+                                style="width: 150px; display: inline-block; margin-right: 10px;">
+                            <span style="color: #6b7280;">people</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Passenger Names</div>
+                        <div class="detail-value">
+                            <div id="passengers-container">
+                                <!-- Passenger name inputs will be generated here -->
+                            </div>
+                            <button type="button" id="add-passenger" class="btn-small btn-add">
+                                <i class="fas fa-plus"></i> Add Passenger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Approval Form -->
+                <form method="POST">
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-credit-card"></i>
+                            Payment Information
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentType">
+                                <i class="fas fa-money-bill"></i> Payment Type *
+                            </label>
+                            <select id="paymentType" name="paymentType" required>
+                                <option value="">-- Select Payment Type --</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Send Bill">Send Bill</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="amount-group" style="display:none;">
+                            <label for="amount">
+                                <i class="fas fa-dollar-sign"></i> Amount (if Cash)
+                            </label>
+                            <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="Enter amount">
+                        </div>
+                        <div class="form-group">
+                            <label for="remarks">
+                                <i class="fas fa-comment"></i> Remarks (Optional)
+                            </label>
+                            <textarea name="remarks" id="remarks" rows="3" placeholder="Add any additional comments or remarks..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="submit" name="action" value="approve" class="btn btn-approve">
+                            <i class="fas fa-check"></i>
+                            Approve Request
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn btn-reject">
+                            <i class="fas fa-times"></i>
+                            Reject Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.getElementById('paymentType').addEventListener('change', function() {
+        const amountGroup = document.getElementById('amount-group');
+        amountGroup.style.display = this.value === 'Cash' ? 'block' : 'none';
+        
+        if (this.value === 'Cash') {
+            document.getElementById('amount').required = true;
+        } else {
+            document.getElementById('amount').required = false;
+        }
+    });
+
+    // Car Rental Passengers Management
+    let passengerCount = 0;
+
+    function createPassengerInput(index, name = '') {
+        return `
+            <div class="passenger-input-row" data-index="${index}">
+                <div class="passenger-counter">${index}</div>
+                <input type="text" 
+                    name="passengerNames[]" 
+                    class="passenger-input" 
+                    placeholder="Enter passenger name" 
+                    value="${name}"
+                    required>
+                <button type="button" class="btn-small btn-remove" onclick="removePassenger(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    function updatePassengerInputs() {
+        const container = document.getElementById('passengers-container');
+        const numberOfPeople = parseInt(document.getElementById('carRentalPeople').value) || 0;
+        
+        // Clear existing inputs
+        container.innerHTML = '';
+        
+        // Get existing names if any
+        const existingNames = {{ travel.get('carRentalNames', '').split(',') | tojson }};
+        
+        // Create inputs based on number of people
+        for (let i = 1; i <= numberOfPeople; i++) {
+            const existingName = existingNames[i-1] ? existingNames[i-1].trim() : '';
+            container.innerHTML += createPassengerInput(i, existingName);
+        }
+        
+        passengerCount = numberOfPeople;
+    }
+
+    function removePassenger(index) {
+        const row = document.querySelector(`[data-index="${index}"]`);
+        if (row) {
+            row.remove();
+            // Update the number input
+            const currentCount = parseInt(document.getElementById('carRentalPeople').value) || 0;
+            if (currentCount > 0) {
+                document.getElementById('carRentalPeople').value = currentCount - 1;
+            }
+            updatePassengerNumbers();
+        }
+    }
+
+    function updatePassengerNumbers() {
+        const rows = document.querySelectorAll('.passenger-input-row');
+        rows.forEach((row, index) => {
+            const counter = row.querySelector('.passenger-counter');
+            const newIndex = index + 1;
+            counter.textContent = newIndex;
+            row.setAttribute('data-index', newIndex);
+            
+            // Update remove button onclick
+            const removeBtn = row.querySelector('.btn-remove');
+            removeBtn.setAttribute('onclick', `removePassenger(${newIndex})`);
+        });
+        
+        // Update the count
+        document.getElementById('carRentalPeople').value = rows.length;
+        passengerCount = rows.length;
+    }
+
+    // Event listeners
+    document.getElementById('carRentalPeople').addEventListener('input', function() {
+        updatePassengerInputs();
+    });
+
+    document.getElementById('add-passenger').addEventListener('click', function() {
+        const currentCount = parseInt(document.getElementById('carRentalPeople').value) || 0;
+        document.getElementById('carRentalPeople').value = currentCount + 1;
+        updatePassengerInputs();
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize passenger inputs
+        updatePassengerInputs();
+        
+        // Add smooth animations
+        const sections = document.querySelectorAll('.detail-section, .form-section');
+        sections.forEach((section, index) => {
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animation = 'slideUp 0.6s ease-out forwards';
+        });
+    });
+
+    // Form validation before submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const numberOfPeople = parseInt(document.getElementById('carRentalPeople').value) || 0;
+        const passengerInputs = document.querySelectorAll('input[name="passengerNames[]"]');
+        
+        if (numberOfPeople > 0 && passengerInputs.length !== numberOfPeople) {
+            e.preventDefault();
+            alert('Please ensure the number of passengers matches the number of names provided.');
+            return false;
+        }
+        
+        // Check if all passenger names are filled
+        let allNamesFilled = true;
+        passengerInputs.forEach(input => {
+            if (!input.value.trim()) {
+                allNamesFilled = false;
+            }
+        });
+        
+        if (numberOfPeople > 0 && !allNamesFilled) {
+            e.preventDefault();
+            alert('Please fill in all passenger names.');
+            return false;
+        }
+    });
+    </script>
+</body>
+</html>

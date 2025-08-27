@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Advance Request</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='kubota_icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .cash-advance-form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #004d40;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #004d40;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .approver-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .approver-table th {
+            background-color: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .approver-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .meal-breakdown {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .meal-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .meal-label {
+            width: 120px;
+            font-weight: bold;
+        }
+
+        .amount-input {
+            width: 150px;
+            padding: 6px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            background-color: #004d40;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: #00796b;
+        }
+        .date-meal-selector {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+        }
+        
+        .date-selector {
+            margin-bottom: 15px;
+        }
+        
+        .meal-checkboxes {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .meal-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .meal-dates-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .meal-date-row {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .meal-date-row:last-child {
+            border-bottom: none;
+        }
+        
+        .date-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .meal-toggles {
+            display: flex;
+            gap: 15px;
+        }
+        
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        label {
+            cursor: pointer;
+        }
+        input[readonly].amount-input {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #555;
+        }
+        .misc-expenses-container {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        }
+        
+        .expense-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expense-type {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        .expense-amount-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .expense-delete {
+            color: #e53935;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        
+        .add-expense-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .expense-type-dropdown {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            flex-grow: 1;
+        }
+        
+        .btn-add-expense {
+            background-color: #00897b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        
+        .btn-add-expense:hover {
+            background-color: #00796b;
+        }
+        
+        #misc-expenses-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* For "Other" expense type custom input */
+        .custom-expense-input {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 150px;
+        }
+        .currency-indicator {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .badge {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .currency-summary {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+    
+    .currency-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .currency-table td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .currency-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .exchange-rate-info {
+        text-align: center;
+        font-style: italic;
+        color: #6c757d;
+        padding-top: 10px;
+    }
+    
+    .php-equivalent {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    .total-row-highlight {
+        background-color: #f0f8ff;
+        font-size: 1.1em;
+    }
+    
+    .total-row-highlight td {
+        padding: 12px 8px;
+        border-top: 2px solid #17a2b8;
+        border-bottom: 2px solid #17a2b8;
+    }
+    
+    #total-amount {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    
+    #total-amount div:nth-child(2) {
+        margin-top: 5px;
+    }
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+        #printable-report, #printable-report * {
+            visibility: visible !important;
+        }
+        #printable-report {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            background: white;
+            color: black;
+            padding: 20px;
+        }
+    }
+    .print-btn {
+        background-color: #ff9800;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+        margin-left: 10px;
+        transition: background 0.2s;
+    }
+    .print-btn:hover {
+        background-color: #fb8c00;
+    }
+    .print-btn:active {
+        background-color: #ef6c00;
+    }
+    @media print {
+        .print-btn {
+            display: none !important;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <strong class="head-text">Kubota Philippines Inc.</strong>
+            <p class="subhead-text">232 Quirino High, Brgy. Baesa, Quezon City</p>
+        </header>
+
+        <div class="cash-advance-form">
+            <div class="form-header">
+                <div class="form-title">EMPLOYEE CASH ADVANCE</div>
+                <div class="date-filed">
+                    <label>Filed Date:</label>
+                    <span>{{ today_date }}</span>
+                </div>
+            </div>
+
+            <form id="cash-advance-form" method="POST" action="/api/cash-advance/{{ toa_number }}">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employee-name">Name:</label>
+                            <input type="text" id="employee-name" name="employeeName" value="{{ employee_name }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="toa-reference">TOA Reference:</label>
+                            <input type="text" id="toa-reference" name="toaReference" value="{{ toa_number }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="toa-date">TOA Date:</label>
+                            <input type="text" id="toa-date" name="toaDate" value="{{ toa_date }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travel-dates">Travel Period:</label>
+                            <input type="text" id="travel-dates" name="travelDates" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expenses Section -->
+                <div class="form-section">
+                    <h3>Expenses:</h3>
+                    
+                    <!-- Meals -->
+                    <div class="meal-breakdown">
+                        <h4>Meals:</h4>
+                        
+                        <div class="meal-dates-container" id="meal-dates-container">
+                            <!-- Meal dates will be populated here -->
+                        </div>
+                        
+                        <div class="total-row">
+                            <span>Total Meals:</span>
+                            <span id="total-meals">PHP 0.00</span>
+                            <input type="hidden" id="total-meals-value" name="totalMeals" value="0">
+                        </div>
+                    </div>
+                    
+                    <div id="hotel-section" class="form-row" style="display: none;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="hotel-payment-type">Hotel Payment Type:</label>
+                            <span id="hotel-payment-type"></span>
+                        </div>
+                        <div class="form-group" id="hotel-amount-group" style="flex: 1; display: none;">
+                            <label for="hotel-expense">Hotel Amount:</label>
+                            <input type="number" id="hotel-expense" name="hotelExpense" class="amount-input expense-amount" min="0" step="0.01" readonly>
+                            <span>PHP</span>
+                        </div>
+                    </div>
+                    {% if travel_data and travel_data.travelType == "4" and travel_data.transportationTypes %}
+                    <div class="form-section">
+                        <h3>Official Business Transportation</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Transportation Types:</label>
+                                <input type="text" value="{{ ', '.join(travel_data.transportationTypes) }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Option:</label>
+                            <input type="text" value="{{ travel_data.paymentOption }}" readonly>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% set has_company_car = 'car-service' in travel.transportationTypes %}
+                    {% set has_tnvs = 'grab' in travel.transportationTypes %}
+                    {% if not has_company_car and has_tnvs %}
+                        <div id="tnvs-transportation-section" class="form-row">
+                            <div class="form-group">
+                                <label for="tnvs-payment-type">Payment Type of Transportation:</label>
+                                <select id="tnvs-payment-type" name="tnvsPaymentType" class="expense-type-dropdown">
+                                    <option value="">-- Select Payment Type --</option>
+                                    <option value="Credit card">Credit card</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="tnvs-amount-group" style="display: none;">
+                                <label for="tnvs-amount">Transportation Amount:</label>
+                                <input type="number" id="tnvs-amount" name="tnvsAmount" class="amount-input expense-amount" min="0" step="0.01">
+                                <span>PHP</span>
+                            </div>
+                        </div>
+                    {% elif not has_company_car %}
+                        <div id="transportation-section" class="form-row">
+                            <div class="form-group">
+                                <label for="transportation">Transportation:</label>
+                                <input type="number" id="transportation" name="transportation" class="amount-input expense-amount" min="0" step="0.01">
+                                <span>PHP</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="transportation-payment-type">Payment Type:</label>
+                                <select id="transportation-payment-type" name="transportationPaymentType" class="expense-type-dropdown">
+                                    <option value="">-- Select Payment Type --</option>
+                                    <option value="Credit card">Credit card</option>
+                                    <option value="Send bill">Send bill</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Miscellaneous Expenses (dynamic) -->
+                    <div class="misc-expenses-container">
+                        <h4>Miscellaneous Expenses:</h4>
+                        
+                        <div id="misc-expenses-list">
+                            <!-- Expenses will be added here dynamically -->
+                        </div>
+                        
+                        <div class="add-expense-row">
+                            <select id="expense-type-selector" class="expense-type-dropdown">
+                                <option value="">-- Select expense type --</option>
+                                <option value="tollFee">Toll Fee</option>
+                                <option value="parking">Parking</option>
+                                <option value="carRental">Car Rental</option>
+                                <option value="carwash">Car Wash</option>
+                                <option value="laundry">Laundry</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <button type="button" id="add-expense-btn" class="btn-add-expense">Add Expense</button>
+                        </div>
+                        
+                        <div class="total-row" style="margin-top: 15px;">
+                            <span>Total Miscellaneous:</span>
+                            <span id="total-misc">PHP 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Amount -->
+                <div class="form-section">
+                    <div class="total-row">
+                        <span>TOTAL AMOUNT:</span>
+                        <span id="total-amount">PHP 0.00</span>
+                    </div>
+                </div>
+
+                <!-- Details Section -->
+                <div class="form-section">
+                    <h3>Details:</h3>
+                    <textarea name="details" rows="4" style="width: 97%"></textarea>
+                </div>
+
+                <!-- Signature Section -->
+                <div class="form-section">
+                    <h3>Approvers</h3>
+                    <table class="approver-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Date Approved</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approval-table-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    
+
+    <script>
+        $('#print-btn').on('click', function() {
+        // Fill in the printable report fields from your form
+        $('#print-employee-name').text($('#employee-name').val());
+        $('#print-toa-reference').text($('#toa-reference').val());
+        $('#print-toa-date').text($('#toa-date').val());
+        $('#print-travel-dates').text($('#travel-dates').val());
+        $('#print-total-amount').text($('#total-amount').text());
+
+        // Meals summary (customize as needed)
+        $('#print-meal-summary').html($('#meal-dates-container').html());
+
+        if ($('#daily-allowance').length) {
+            const days = $('#daily-allowance').val() / 20; // Assuming 20 USD per day
+            $('#print-daily-allowance-summary').html(
+                `<strong>Daily Allowance:</strong> USD 20 x ${days} days = USD ${$('#daily-allowance').val()}<br>` +
+                `<span>PHP Equivalent: ${$('#daily-allowance-php').text()}</span>`
+            );
+        } else {
+            $('#print-daily-allowance-summary').html('');
+        }
+
+        // Hotel summary
+        if ($('#hotel-section').is(':visible')) {
+            $('#print-hotel-summary').html(
+                `<strong>Hotel Payment Type:</strong> ${$('#hotel-payment-type').text()}<br>` +
+                ($('#hotel-amount-group').is(':visible') ? `<strong>Hotel Amount:</strong> ${$('#hotel-expense').val()} PHP` : '')
+            );
+        } else {
+            $('#print-hotel-summary').html('');
+        }
+
+        // Transportation summary
+        if ($('#transportation-section').is(':visible')) {
+            $('#print-transportation-summary').html(
+                `<strong>Transportation:</strong> ${$('#transportation').val()} PHP`
+            );
+        } else {
+            $('#print-transportation-summary').html('');
+        }
+
+        // Miscellaneous summary
+        let miscHtml = '';
+        $('#misc-expenses-list .expense-item').each(function() {
+            miscHtml += `<div>${$(this).find('.expense-type').text()}: ${$(this).find('.misc-expense-amount').val()} PHP</div>`;
+        });
+        $('#print-misc-summary').html(miscHtml);
+
+        // Show printable section, print, then hide
+        $('#printable-report').show();
+        window.print();
+        $('#printable-report').hide();
+    });
+
+        $(document).ready(function() {
+            let exchangeRates = {};
+            let isInternationalTravel = false;
+            const USD_BREAKFAST_ALLOWANCE = 10;
+            const USD_LUNCH_ALLOWANCE = 10;
+            const USD_DINNER_ALLOWANCE = 20;
+            const USD_DAILY_ALLOWANCE = 20;
+            const PHP_MEAL_ALLOWANCE = 180;
+
+            // Function to fetch exchange rates
+            async function fetchExchangeRates() {
+                try {
+                    const apiKey = 'ef2f4fff5710a0e76444053d';
+                    const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const data = await response.json();
+                    if (data.result === 'success') {
+                        exchangeRates = data.conversion_rates;
+                        console.log('Exchange rates loaded:', exchangeRates);
+                        return exchangeRates;
+                    } else {
+                        throw new Error('Failed to get exchange rates');
+                    }
+                } catch (error) {
+                    console.error('Error fetching exchange rates:', error);
+                    // Default fallback rate if API fails
+                    return { PHP: 55 }; // Approximate USD to PHP rate as fallback
+                }
+            }
+
+            // Constants
+             // PHP per meal
+            
+            // Initialize data structures
+            let travelDates = [];
+            let selectedMeals = {};
+            let flightInfo = {};
+            let hotelAmount = 0;
+            let miscExpenses = {}; // To track miscellaneous expenses
+            let transportationTypes = []; // To track selected transportation types
+            
+            // Load travel details including dates, verification data, and transportation options
+            loadTravelDetails();
+            
+            function loadTravelDetails() {
+                $.get(`/api/travel/{{ toa_number }}`, function(travelData) {
+                    // Check if this is an international travel
+                    isInternationalTravel = travelData.travelType === "2"; // Assuming "2" is the code for international travel
+                    
+                    // If international, fetch exchange rates
+                    if (isInternationalTravel) {
+                        fetchExchangeRates().then(() => {
+                            // Create a currency indicator on the page
+                            $('.form-header').append(`
+                                <div class="currency-indicator">
+                                    <span class="badge badge-warning">International Travel</span>
+                                </div>
+                            `);
+                            
+                            // Update any UI elements to show USD instead of PHP for international travel
+                            updateCurrencyLabels();
+                        });
+                    }
+                    
+                    // Get start and end dates
+                    if (travelData.startDate && travelData.endDate) {
+                        const startDate = new Date(travelData.startDate);
+                        const endDate = new Date(travelData.endDate);
+                        
+                        // Format dates for display
+                        const formattedStartDate = formatDateForDisplay(startDate);
+                        const formattedEndDate = formatDateForDisplay(endDate);
+                        
+                        // Display travel period
+                        $('#travel-dates').val(`${formattedStartDate} to ${formattedEndDate}`);
+                        
+                        // Generate array of dates between start and end
+                        travelDates = getDatesInRange(startDate, endDate);
+                        
+                        // Check if hotel was required
+                        const requiresHotel = travelData.requiresHotel || false;
+                        
+                        // Get transportation types if any
+                        transportationTypes = travelData.transportationTypes || [];
+                        
+                        // Now load verification data (contains flight info)
+                        loadVerificationData(travelDates, requiresHotel);
+                    }
+                }).fail(function(error) {
+                    console.error('Error loading travel details:', error);
+                });
+            }
+
+            function updateCurrencyLabels() {
+                if (isInternationalTravel) {
+                    // Update meal section labels to show USD
+                    $('.meal-checkbox-group label').each(function() {
+                        const mealType = $(this).attr('for').split('-')[0];
+                        let usdAmount;
+                        
+                        if (mealType === 'breakfast') usdAmount = USD_BREAKFAST_ALLOWANCE;
+                        else if (mealType === 'lunch') usdAmount = USD_LUNCH_ALLOWANCE;
+                        else if (mealType === 'dinner') usdAmount = USD_DINNER_ALLOWANCE;
+                        
+                        $(this).text(`${mealType.charAt(0).toUpperCase() + mealType.slice(1)} (USD ${usdAmount})`);
+                    });
+                    
+                    // Add daily allowance section
+                    if (!$('#daily-allowance-section').length) {
+                        const dailyAllowanceSection = `
+                            <div id="daily-allowance-section" class="form-row">
+                                <div class="form-group">
+                                    <label>Daily Allowance (USD ${USD_DAILY_ALLOWANCE} per day):</label>
+                                    <input type="number" id="daily-allowance" class="amount-input expense-amount" 
+                                        value="${travelDates.length * USD_DAILY_ALLOWANCE}" readonly>
+                                    <span>USD</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Insert after the meal section
+                        $('#meal-dates-container').after(dailyAllowanceSection);
+                    }
+                }
+            }
+            
+            function loadVerificationData(dates, requiresHotel) {
+                $.get(`/api/verification/{{ toa_number }}`, function(verificationData) {
+                    // Extract flight information if available
+                    if (verificationData.flightDetails) {
+                        flightInfo = {
+                            departure: verificationData.flightDetails.departure ? new Date(verificationData.flightDetails.departure) : null,
+                            arrival: verificationData.flightDetails.arrival ? new Date(verificationData.flightDetails.arrival) : null
+                        };
+                    }
+                    
+                    // Only show hotel section if it was required and has an amount
+                    if (requiresHotel && verificationData.hotel && verificationData.hotel.amount) {
+                        $('#hotel-section').show();
+                        $('#hotel-payment-type').text(verificationData.hotel.paymentType);
+
+                        if (verificationData.hotel.paymentType.toLowerCase() === 'cash') {
+                            $('#hotel-amount-group').show();
+                            $('#hotel-expense').val(parseFloat(verificationData.hotel.amount) || 0);
+                        } else {
+                            $('#hotel-amount-group').hide();
+                            $('#hotel-expense').val('');
+                        }
+                    } else {
+                        $('#hotel-section').hide();
+                    }
+                    
+                    // Show transportation section only if Grab or Car Service was selected
+                    const showTransportation = transportationTypes.some(
+                        type => type === 'grab' || type === 'car-rental'
+                    );
+                    
+                    if (showTransportation) {
+                        $('#transportation-section').show();
+                    } else {
+                        $('#transportation-section').hide();
+                    }
+                    
+                    // Generate meal selection UI
+                    generateMealSelections(dates, flightInfo);
+                    
+                    // Calculate initial totals
+                    calculateTotals();
+                }).fail(function(error) {
+                    console.error('Error loading verification data:', error);
+                    // Still generate meal selections even if verification data fails
+                    generateMealSelections(dates, {});
+                });
+            }
+            
+            function generateMealSelections(dates, flightInfo) {
+                // Your existing meal selection generation code
+                const container = $('#meal-dates-container');
+                container.empty();
+                
+                // For each travel date
+                dates.forEach((date, index) => {
+                    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+                    const formattedDate = formatDateForDisplay(date);
+                    
+                    // Determine meal prices based on travel type
+                    let breakfastPrice, lunchPrice, dinnerPrice, currency;
+                    
+                    if (isInternationalTravel) {
+                        breakfastPrice = USD_BREAKFAST_ALLOWANCE;
+                        lunchPrice = USD_LUNCH_ALLOWANCE;
+                        dinnerPrice = USD_DINNER_ALLOWANCE;
+                        currency = 'USD';
+                    } else {
+                        breakfastPrice = PHP_MEAL_ALLOWANCE;
+                        lunchPrice = PHP_MEAL_ALLOWANCE;
+                        dinnerPrice = PHP_MEAL_ALLOWANCE;
+                        currency = 'PHP';
+                    }
+                    
+                    // Create a new row for this date
+                    const dateRow = $(`
+                        <div class="meal-date-row" data-date="${dateStr}">
+                            <div class="date-header">${formattedDate}</div>
+                            <div class="meal-toggles">
+                                <div class="meal-checkbox-group">
+                                    <input type="checkbox" id="breakfast-${dateStr}" class="meal-checkbox" 
+                                        data-date="${dateStr}" data-meal="breakfast" checked>
+                                    <label for="breakfast-${dateStr}">Breakfast (${currency} ${breakfastPrice})</label>
+                                </div>
+                                <div class="meal-checkbox-group">
+                                    <input type="checkbox" id="lunch-${dateStr}" class="meal-checkbox"
+                                        data-date="${dateStr}" data-meal="lunch" checked>
+                                    <label for="lunch-${dateStr}">Lunch (${currency} ${lunchPrice})</label>
+                                </div>
+                                <div class="meal-checkbox-group">
+                                    <input type="checkbox" id="dinner-${dateStr}" class="meal-checkbox"
+                                        data-date="${dateStr}" data-meal="dinner" checked>
+                                    <label for="dinner-${dateStr}">Dinner (${currency} ${dinnerPrice})</label>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Apply flight time logic to uncheck meals - keep your existing logic here
+                    if (flightInfo.departure && isSameDate(date, flightInfo.departure)) {
+                        // If flight departs before 8 AM, uncheck breakfast
+                        if (flightInfo.departure.getHours() > 10) {
+                            dateRow.find('#breakfast-' + dateStr).prop('checked', false);
+                        }
+                        // If flight departs before 12 PM, uncheck lunch
+                        if (flightInfo.departure.getHours() > 15) {
+                            dateRow.find('#lunch-' + dateStr).prop('checked', false);
+                        }
+                        // If flight departs before 7 PM, uncheck dinner
+                        if (flightInfo.departure.getHours() > 22) {
+                            dateRow.find('#dinner-' + dateStr).prop('checked', false);
+                        }
+                    }
+                    
+                    if (flightInfo.arrival && isSameDate(date, flightInfo.arrival)) {
+                        // If flight arrives after 9 AM, uncheck breakfast
+                        if (flightInfo.arrival.getHours() < 4) {
+                            dateRow.find('#breakfast-' + dateStr).prop('checked', false);
+                        }
+                        // If flight arrives after 1 PM, uncheck lunch
+                        if (flightInfo.arrival.getHours() < 9) {
+                            dateRow.find('#lunch-' + dateStr).prop('checked', false);
+                        }
+                        // If flight arrives after 8 PM, uncheck dinner
+                        if (flightInfo.arrival.getHours() < 16) {
+                            dateRow.find('#dinner-' + dateStr).prop('checked', false);
+                        }
+                    }
+                    
+                    container.append(dateRow);
+                    
+                    // Initialize the selected meals tracking with the correct prices
+                    selectedMeals[dateStr] = {
+                        breakfast: dateRow.find('#breakfast-' + dateStr).prop('checked') ? breakfastPrice : 0,
+                        lunch: dateRow.find('#lunch-' + dateStr).prop('checked') ? lunchPrice : 0,
+                        dinner: dateRow.find('#dinner-' + dateStr).prop('checked') ? dinnerPrice : 0,
+                        currency: currency
+                    };
+                });
+                
+                // Attach event handlers for meal checkboxes
+                $('.meal-checkbox').on('change', function() {
+                    const dateStr = $(this).data('date');
+                    const meal = $(this).data('meal');
+                    
+                    let price;
+                    if (isInternationalTravel) {
+                        if (meal === 'breakfast') price = USD_BREAKFAST_ALLOWANCE;
+                        else if (meal === 'lunch') price = USD_LUNCH_ALLOWANCE;
+                        else if (meal === 'dinner') price = USD_DINNER_ALLOWANCE;
+                    } else {
+                        price = PHP_MEAL_ALLOWANCE;
+                    }
+                    
+                    // Update selected meals tracking with the price
+                    selectedMeals[dateStr][meal] = $(this).prop('checked') ? price : 0;
+                    
+                    // Recalculate totals
+                    calculateTotals();
+                });
+                
+                // For international travel, add the daily allowance
+                if (isInternationalTravel && !$('#daily-allowance-section').length) {
+                    const totalDays = dates.length;
+                    const dailyAllowanceTotal = totalDays * USD_DAILY_ALLOWANCE;
+                    
+                    const dailyAllowanceSection = $(`
+                        <div id="daily-allowance-section" class="form-section">
+                            <h4>Daily Allowance</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Daily Allowance (${totalDays} days × USD ${USD_DAILY_ALLOWANCE}):</label>
+                                    <input type="number" id="daily-allowance" class="amount-input" 
+                                        value="${dailyAllowanceTotal}" readonly>
+                                    <span>USD</span>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Insert after the meal section
+                    $('#meal-dates-container').parent().after(dailyAllowanceSection);
+                }
+                
+                calculateTotals();
+            }
+            
+            // Add expense button handler
+            $('#add-expense-btn').click(function() {
+                const expenseType = $('#expense-type-selector').val();
+
+                if (!expenseType) {
+                    alert('Please select an expense type');
+                    return;
+                }
+
+                let expenseKey = expenseType;
+                let expenseLabel = $('#expense-type-selector option:selected').text();
+          // For "Other" expense type, prompt for a custom label
+                if (expenseType === 'other') {
+                    const customLabel = prompt('Please enter the expense description:');
+                    if (!customLabel) return;
+
+                    // Check for "Representation" (case-insensitive, trimmed)
+                    if (customLabel.trim().toLowerCase() === 'representation') {
+                        alert('This action has a separate process related to Representation Expense.');
+                        return;
+                    }
+
+                    expenseLabel = customLabel;
+                    expenseKey = 'other-' + customLabel.trim().toLowerCase(); // Make key unique per label
+                }
+
+                // Check if this exact expense already exists
+                if (miscExpenses[expenseKey]) {
+                    alert('This expense type already exists. Please edit the existing one instead.');
+                    return;
+                }
+
+                // Add expense to the list
+                const expenseId = 'expense-' + Date.now();
+                const expenseItem = $(`
+                    <div class="expense-item" id="${expenseId}" data-type="${expenseType}">
+                        <span class="expense-type">${expenseLabel}</span>
+                        <div class="expense-amount-container">
+                            <input type="number" class="amount-input misc-expense-amount" min="0" step="0.01" value="0">
+                            <span>PHP</span>
+                            <span class="expense-delete">&times;</span>
+                        </div>
+                    </div>
+                `);
+
+                $('#misc-expenses-list').append(expenseItem);
+
+                // Track the expense
+                miscExpenses[expenseType] = {
+                    id: expenseId,
+                    label: expenseLabel,
+                    amount: 0
+                };
+
+                // Reset selector
+                $('#expense-type-selector').val('');
+
+                // Add change event handler to the new input
+                expenseItem.find('.misc-expense-amount').on('input', function() {
+                    const amount = parseFloat($(this).val()) || 0;
+                    miscExpenses[expenseType].amount = amount;
+                    calculateTotals();
+                });
+
+                // Add delete handler
+                expenseItem.find('.expense-delete').on('click', function() {
+                    delete miscExpenses[expenseType];
+                    expenseItem.remove();
+                    calculateTotals();
+                });
+
+                calculateTotals();
+            });
+            
+            // Keep your helper functions
+            function isSameDate(date1, date2) {
+                // Your existing code
+                return date1.getDate() === date2.getDate() &&
+                       date1.getMonth() === date2.getMonth() &&
+                       date1.getFullYear() === date2.getFullYear();
+            }
+            
+            function getDatesInRange(startDate, endDate) {
+                // Your existing code
+                const dates = [];
+                const currentDate = new Date(startDate);
+                
+                // Add one day until we reach the end date
+                while (currentDate <= endDate) {
+                    dates.push(new Date(currentDate));
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                return dates;
+            }
+            
+            function formatDateForDisplay(date) {
+                // Your existing code
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+            
+            // Update calculation logic
+            function calculateTotals() {
+                // Calculate meals total with proper currency handling
+                let mealsUsdTotal = 0;
+                let mealsPhpTotal = 0;
+                let mealBreakdown = {
+                    breakfast: { usd: 0, php: 0 },
+                    lunch: { usd: 0, php: 0 },
+                    dinner: { usd: 0, php: 0 }
+                };
+                
+                Object.keys(selectedMeals).forEach(dateStr => {
+                    const mealData = selectedMeals[dateStr];
+                    const currency = mealData.currency || 'PHP';
+                    
+                    if (currency === 'USD') {
+                        mealsUsdTotal += mealData.breakfast + mealData.lunch + mealData.dinner;
+                        mealBreakdown.breakfast.usd += mealData.breakfast;
+                        mealBreakdown.lunch.usd += mealData.lunch;
+                        mealBreakdown.dinner.usd += mealData.dinner;
+                    } else {
+                        mealsPhpTotal += mealData.breakfast + mealData.lunch + mealData.dinner;
+                        mealBreakdown.breakfast.php += mealData.breakfast;
+                        mealBreakdown.lunch.php += mealData.lunch;
+                        mealBreakdown.dinner.php += mealData.dinner;
+                    }
+                });
+                
+                // Calculate daily allowance for international travel
+                let dailyAllowanceUsd = 0;
+                if (isInternationalTravel) {
+                    dailyAllowanceUsd = travelDates.length * USD_DAILY_ALLOWANCE;
+                }
+                
+                // Calculate USD to PHP conversion if needed
+                let usdToPhpRate = exchangeRates.PHP || 55; // Use API rate or fallback
+                let totalMealsPhpEquivalent = mealsPhpTotal + (mealsUsdTotal * usdToPhpRate);
+                let dailyAllowancePhpEquivalent = dailyAllowanceUsd * usdToPhpRate;
+                
+                // Update meals total display
+                if (isInternationalTravel) {
+                    $('#total-meals').html(`
+                        <div>USD ${mealsUsdTotal.toFixed(2)}</div>
+                    `);
+                } else {
+                    $('#total-meals').text('PHP ' + mealsPhpTotal.toFixed(2));
+                }
+                $('#total-meals-value').val(totalMealsPhpEquivalent);
+                
+                // Update daily allowance if it exists
+                if ($('#daily-allowance').length) {
+                    $('#daily-allowance').val(dailyAllowanceUsd.toFixed(2));
+                }
+                
+                // Calculate miscellaneous expenses total
+                let miscTotal = 0;
+                Object.values(miscExpenses).forEach(expense => {
+                    miscTotal += expense.amount;
+                });
+                
+                // Update misc total
+                $('#total-misc').text('PHP ' + miscTotal.toFixed(2));
+                
+                // Calculate overall total in PHP
+                let overallTotal = miscTotal;
+
+                if (!isInternationalTravel) {
+                    overallTotal += mealsPhpTotal;
+                }
+
+                
+                // Add hotel if visible
+                if ($('#hotel-section').is(':visible')) {
+                    overallTotal += parseFloat($('#hotel-expense').val()) || 0;
+                }
+                
+                // Add transportation if visible
+                if ($('#transportation-section').is(':visible')) {
+                    overallTotal += parseFloat($('#transportation').val()) || 0;
+                }
+
+                if ($('#tnvs-amount-group').is(':visible')) {
+                    overallTotal += parseFloat($('#tnvs-amount').val()) || 0;
+                }
+                
+                // Calculate USD equivalents for non-USD expenses
+                const hotelUsd = $('#hotel-section').is(':visible') ? 
+                    (parseFloat($('#hotel-expense').val()) || 0) / usdToPhpRate : 0;
+                    
+                const transportationUsd = $('#transportation-section').is(':visible') ? 
+                    (parseFloat($('#transportation').val()) || 0) / usdToPhpRate : 0;
+                    
+                const miscUsd = miscTotal / usdToPhpRate;
+                
+                // Calculate total in USD for international travel
+                let overallUsdTotal = 0;
+                if (isInternationalTravel) {
+                    overallUsdTotal = mealsUsdTotal + dailyAllowanceUsd + hotelUsd;
+                }
+                
+                // Update overall total display
+                if (isInternationalTravel) {
+                    $('#total-amount').html(`
+                        <div>PHP ${overallTotal.toFixed(2)}</div>
+                        <div style="color: #17a2b8; font-weight: bold;">USD ${overallUsdTotal.toFixed(2)}</div>
+                    `);
+                } else {
+                    $('#total-amount').text('PHP ' + overallTotal.toFixed(2));
+                }
+                
+                // If we have international travel, update the summary section with USD breakdown and add a clear total
+                if (isInternationalTravel) {
+                    let summaryHtml = `
+                        <div class="currency-summary">
+                            <h4>Currency Breakdown</h4>
+                            <table class="currency-table">
+                                <tr>
+                                    <td>Meals:</td>
+                                    <td>USD ${mealsUsdTotal.toFixed(2)}</td>
+                                    
+                                </tr>
+                                <tr>
+                                    <td>Daily Allowance:</td>
+                                    <td>USD ${dailyAllowanceUsd.toFixed(2)}</td>
+                                    
+                                </tr>
+                                ${$('#hotel-section').is(':visible') ? `
+                                <tr>
+                                    <td>Hotel:</td>
+                                    <td>USD ${hotelUsd.toFixed(2)}</td>
+                                    <td>PHP ${($('#hotel-expense').val() || 0)}</td>
+                                </tr>` : ''}
+                                ${$('#transportation-section').is(':visible') ? `
+                                <tr>
+                                    <td>Transportation:</td>
+                                    <td>USD ${transportationUsd.toFixed(2)}</td>
+                                    <td>PHP ${($('#transportation').val() || 0)}</td>
+                                </tr>` : ''}
+                                <tr class="total-row-highlight">
+                                    <td><strong>TOTAL:</strong></td>
+                                    <td><strong>USD ${overallUsdTotal.toFixed(2)}</strong></td>
+                                </tr>
+                                
+                            </table>
+                        </div>
+                    `;
+                    
+                    // Update or create the summary section
+                    if ($('.currency-summary').length) {
+                        $('.currency-summary').replaceWith(summaryHtml);
+                    } else {
+                        $(summaryHtml).insertBefore($('#total-amount').parent());
+                    }
+                }
+            }
+            
+            // Calculate totals when any amount input changes
+            $('.meal-checkbox, .expense-amount').on('change input', function() {
+                calculateTotals();
+            });
+
+            $('#tnvs-payment-type').on('change', function() {
+                if ($(this).val() === 'Cash') {
+                    $('#tnvs-amount-group').show();
+                } else {
+                    $('#tnvs-amount-group').hide();
+                }
+            });
+            
+            // Submit form via AJAX
+            $('#cash-advance-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Prepare meal details with breakdown by date and the correct currency
+                const mealDetails = {};
+                Object.keys(selectedMeals).forEach(dateStr => {
+                    mealDetails[dateStr] = {
+                        breakfast: selectedMeals[dateStr].breakfast || 0,
+                        lunch: selectedMeals[dateStr].lunch || 0,
+                        dinner: selectedMeals[dateStr].dinner || 0,
+                        currency: selectedMeals[dateStr].currency || 'PHP'
+                    };
+                });
+                
+                // Prepare miscellaneous expenses
+                const miscExpensesList = {};
+                Object.entries(miscExpenses).forEach(([type, data]) => {
+                    miscExpensesList[type] = {
+                        label: data.label,
+                        amount: data.amount
+                    };
+                });
+                
+                // Calculate USD totals
+                let breakfastUsdTotal = 0;
+                let lunchUsdTotal = 0;
+                let dinnerUsdTotal = 0;
+                let mealsUsdTotal = 0;
+                
+                if (isInternationalTravel) {
+                    Object.keys(selectedMeals).forEach(dateStr => {
+                        if (selectedMeals[dateStr].currency === 'USD') {
+                            breakfastUsdTotal += selectedMeals[dateStr].breakfast || 0;
+                            lunchUsdTotal += selectedMeals[dateStr].lunch || 0;
+                            dinnerUsdTotal += selectedMeals[dateStr].dinner || 0;
+                        }
+                    });
+                    mealsUsdTotal = breakfastUsdTotal + lunchUsdTotal + dinnerUsdTotal;
+                }
+                
+                // Get daily allowance if applicable
+                const dailyAllowanceUsd = isInternationalTravel ? (travelDates.length * USD_DAILY_ALLOWANCE) : 0;
+                const usdToPhpRate = exchangeRates.PHP || 55;
+                
+                // Calculate overall USD total
+                let overallUsdTotal = 0;
+                if (isInternationalTravel) {
+                    const hotelUsd = $('#hotel-section').is(':visible') ? 
+                        (parseFloat($('#hotel-expense').val()) || 0) / usdToPhpRate : 0;
+                        
+                    const transportationUsd = $('#transportation-section').is(':visible') ? 
+                        (parseFloat($('#transportation').val()) || 0) / usdToPhpRate : 0;
+                        
+                    const miscUsd = parseFloat($('#total-misc').text().replace('PHP ', '')) / usdToPhpRate || 0;
+                    
+                    overallUsdTotal = mealsUsdTotal + dailyAllowanceUsd + hotelUsd + transportationUsd + miscUsd;
+                }
+                
+                
+                const formData = {
+                    employeeName: $('#employee-name').val(),
+                    toaReference: $('#toa-reference').val(),
+                    toaDate: $('#toa-date').val(),
+                    isInternational: isInternationalTravel,
+                    exchangeRate: usdToPhpRate,
+                    meals: {
+                        detailed: mealDetails,
+                        breakfast: isInternationalTravel ? 
+                            { usd: breakfastUsdTotal, php: breakfastUsdTotal * usdToPhpRate } : 
+                            { php: $('[data-meal="breakfast"]:checked').length * PHP_MEAL_ALLOWANCE },
+                        lunch: isInternationalTravel ? 
+                            { usd: lunchUsdTotal, php: lunchUsdTotal * usdToPhpRate } : 
+                            { php: $('[data-meal="lunch"]:checked').length * PHP_MEAL_ALLOWANCE },
+                        dinner: isInternationalTravel ? 
+                            { usd: dinnerUsdTotal, php: dinnerUsdTotal * usdToPhpRate } : 
+                            { php: $('[data-meal="dinner"]:checked').length * PHP_MEAL_ALLOWANCE },
+                        total: parseFloat($('#total-meals-value').val()) || 0
+                    },
+                    dailyAllowance: isInternationalTravel ? {
+                        usd: dailyAllowanceUsd,
+                        php: dailyAllowanceUsd * usdToPhpRate,
+                        days: travelDates.length
+                    } : null,
+                    hotel: $('#hotel-section').is(':visible') ? parseFloat($('#hotel-expense').val()) || 0 : 0,
+                    transportation: $('#transportation-section').is(':visible') ? parseFloat($('#transportation').val()) || 0 : 0,
+                    transportationPaymentType: $('#transportation-section').is(':visible') ? $('#transportation-payment-type').val() : "",
+                    tnvsAmount: $('#tnvs-amount-group').is(':visible') ? parseFloat($('#tnvs-amount').val()) || 0 : 0,
+                    tnvsPaymentType: $('#tnvs-transportation-section').is(':visible') ? $('#tnvs-payment-type').val() : "",
+                    miscellaneous: miscExpensesList,
+                    miscTotal: parseFloat($('#total-misc').text().replace('PHP ', '')) || 0,
+                    totalAmount: parseFloat($('#total-amount').text().replace('PHP ', '')) || 0,
+                    totalAmountUsd: isInternationalTravel ? overallUsdTotal : 0,
+                    details: $('textarea[name="details"]').val()
+                };
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/cash-advance/{{ toa_number }}',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        alert('Cash advance request submitted successfully!');
+                        window.location.href = '/home';
+                    },
+                    error: function(error) {
+                        alert('Error submitting cash advance request: ' + (error.responseJSON ? error.responseJSON.error : 'Unknown error'));
+                    }
+                });
+            });
+        });
+        function updateApproverTable() {
+            $.get(`/api/travel/{{ toa_number }}`, function(travelData) {
+                const approvers = travelData.approvers || [];
+                const tableBody = document.getElementById('approval-table-body');
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
+                approvers.forEach(function(approver) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${approver.name}</td>
+                        <td>${approver.position || approver.rank || ''}</td>
+                        <td>${approver.status || 'Pending'}</td>
+                        <td>${approver.dateApproved || 'Pending'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            // Initial load
+            updateApproverTable();
+
+            // After successful cash advance submission, refresh the table
+            $('#cash-advance-form').on('submit', function(e) {
+                e.preventDefault();
+                // ... your existing AJAX code ...
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/cash-advance/{{ toa_number }}',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        alert('Cash advance request submitted successfully!');
+                        updateApproverTable(); // Refresh the table after submit
+                    },
+                    error: function(error) {
+                        alert('Error submitting cash advance request: ' + (error.responseJSON ? error.responseJSON.error : 'Unknown error'));
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
