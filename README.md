@@ -66,34 +66,6 @@ It is built using Flask (Python), MongoDB, and Flask-Mail for email notification
 - Git
 - (Optional) Virtualenv
 
-### Installation
-
-1. Clone the repository:
-   ```sh
-   git clone https://gitlab.com/your-org/travel-authority-system.git
-   cd travel-authority-system
-   ```
-
-2. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
-
-3. Set up MongoDB:
-   - Ensure MongoDB is running on `localhost:27017`
-   - Database name: `travelAuthority`
-
-4. Configure Email:
-   - Edit app.py with your Gmail app password or SMTP credentials.
-
-5. Run the application:
-   ```sh
-   python app.py
-   ```
-   - Access the system at [http://localhost:5000](http://localhost:5000)
-
----
-
 ## How to Use (User Manual)
 
 1. **Login / Signup**
