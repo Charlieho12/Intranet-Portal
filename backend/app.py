@@ -15,7 +15,6 @@ import logging
 import pytz
 
 app = Flask(__name__)
-# app.config['SERVER_NAME'] = '172.20.238.158:5000'
 app.secret_key = 'Kubota'
 CORS(app)
 
